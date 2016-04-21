@@ -54,7 +54,6 @@ public:
 
 private:
 	FILE *file;
-
 }; 
 
 #endif
