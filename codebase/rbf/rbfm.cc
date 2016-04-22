@@ -1,4 +1,6 @@
 #include "rbfm.h"
+#include <iostream>
+#include <fstream>
 
 RecordBasedFileManager* RecordBasedFileManager::_rbf_manager = 0;
 
