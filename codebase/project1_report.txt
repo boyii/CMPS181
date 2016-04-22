@@ -1,7 +1,7 @@
 1. Basic information
-Student ID of submitter: 
-Student Name of submitter: 
-Team number :
+Student ID of submitter: 1360826
+Student Name of submitter: Steven Rodriguez
+Team number : 7
 
 
 2. Internal Record Format
@@ -10,12 +10,43 @@ Team number :
 
 
 3. Page Format
-- Show your page format design
+- Then pages are 4096 bytes, as defined in the original header file. They contain the data passed into the rbf methods writepage and appendpage
 
 
 4. Implementation Detail
-- Other implementation details goes here.
+- rbf.cc:
+	PagedFileManager
+	createFile(fileName) : Runs a check if the fileName exists, if it succeeds
+			       Then it creates a new file called fileName using ofstream
+	destroyFile(fileName) : First, it must change the c++ string* to a const char* to match the type for the standard c function. 
+				Then it uses remove(fileName) returning its succ/fail val.
+	openFile(fileName, fileHandle) : Again, first it converts string* to const char*
+					 Then it opens the file using fopen with the ability to read with binary (fixed with bug on fseek later) 
+					 and checks if the file was successfully opened. Last it sets the handle in fileHandle to the file opened.
+	closeFile(fileHandle) : Uses the getter in fileHandle to recieve the file set as its handle and closes it, returns its succ/fail val
+	
+	
+	FileHandle
+	FileHandle() : Same constructor but added the pointer to a file which will be used in the next methods. Also added a getter and setter
+		       to access and set the file in the constructor.
+	writePage(pageNum, *data) : First, checks that the page is a valid page number (comparing with total pages)
+				   Then, uses fseek to go to the page number. This is tricky because fseek goes byte by byte and we need have it skip 
+				   by the size of a page. So multiply PAGE_SIZE (4096 bytes) by the pageNum value. Now that the current state of the fseek 
+				   if on the pagenum we want, we use fwrite to write the *data with PAGE_SIZE bytes and then fflush finishes writing 
+				   all the set changes to the file. Last it increments the writePageCounter.
+	appendPage(*data) : This seeks to the end of the file and writes a page at the end of the file. It writes the same way as writePage by fflushing the
+			    data to the file after it is staged to write. It increments the appendPageCounter.
+	readPage(pageNum, *data) : It has the same first steps as writePage with regards to checking the pageNum and fseeking to the proper page. Now it just
+				   reads the page at that location to data aand increments the readPageCounter.
+	getNumberofPages() : This seeks to the end of the file and collects the state of the cursor with ftell. This number is the total bits, so it is required
+			     to divide it by PAGE_SIZE to achieve how many pages are in the file.
+	collectCounterValues(readPageCount, writePageCount, appendPageCount) :
+			    It sets all the parameter values to the values of the current counters in the FileHandle instance.
 
+	
+-rbfm.cc
+	
+	
 
 5. Other (optional)
 - Freely use this section to tell us about other things related to the project 1 (optional)
