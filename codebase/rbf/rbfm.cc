@@ -39,11 +39,21 @@ RC RecordBasedFileManager::destroyFile(const string &fileName) {
 }
 
 RC RecordBasedFileManager::openFile(const string &fileName, FileHandle &fileHandle) {
-    return -1;
+	PagedFileManager PFM = PagedFileManager();
+	ifstream infile(fileName);
+	if (infile.good()) {
+		int i = PFM.openFile(fileName, fileHandle);
+		if (i == 0) return 0;
+	}
+
+	return -1;
+	
 }
 
 RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
-    return -1;
+	PagedFileManager PFM = PagedFileManager();
+	int i = PFM.closeFile(fileHandle);
+	return i;
 }
 
 RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const void *data, RID &rid) {
