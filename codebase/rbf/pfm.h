@@ -14,6 +14,7 @@ class FileHandle;
 
 class PagedFileManager
 {
+	friend class RecordBasedFileManager;
 public:
     static PagedFileManager* instance();                     			// Access to the _pf_manager instance
 
