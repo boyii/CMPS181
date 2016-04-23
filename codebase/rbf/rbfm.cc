@@ -67,5 +67,47 @@ RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attri
 }
 
 RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor, const void *data) {
-    return -1;
+
+	int field_num = ceil(recordDescriptor.size()/8);
+	int buffer = 0;
+	int int_type;
+	int string_type;
+	float float_type;
+	int int_bytes = 4;
+	char * final_op;
+
+	for (auto j = 0;j < recordDescriptor.size();++j) {
+
+		if (recordDescriptor.at(j).type == 0) {
+			memcpy(&int_type,((char *) data + buffer), 4); // copy int from data to int_type with byte size 4
+			buffer += 4; //make buffer room
+
+
+			cout << recordDescriptor[j].name << ": " << int_type << endl;
+			// int
+
+		}
+		else if (recordDescriptor.at(j).type == 1) {
+			memcpy(&float_type,((char *) data + buffer ),4);
+			buffer = buffer + 4;
+			cout << recordDescriptor[j].name << ": " << float_type << endl;
+
+			// real
+		}
+		else if (recordDescriptor.at(j).type == 2) {
+			memcpy(&string_type,((char *) data + buffer),4);
+			buffer = buffer + 4;
+			cout << recordDescriptor[j].name << ": " << string_type << endl;
+			final_op = (char *) malloc(string_type + 1);
+			memcpy((void*) final_op, ((char *)data + 4), string_type);
+			final_op[string_type] = '\0';
+			buffer = buffer + string_type;
+
+			cout << recordDescriptor[j].name << ": " << final_op << endl;
+			free(final_op);
+			// varchar
+		}
+		
+	return -1;
+
 }
