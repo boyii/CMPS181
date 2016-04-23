@@ -95,11 +95,11 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
 			// real
 		}
 		else if (recordDescriptor.at(j).type == 2) {
+			
 			memcpy(&string_type,((char *) data + buffer),4);
 			buffer = buffer + 4;
-			cout << recordDescriptor[j].name << ": " << string_type << endl;
 			final_op = (char *) malloc(string_type + 1);
-			memcpy((void*) final_op, ((char *)data + 4), string_type);
+			memcpy((void*) final_op, ((char *)data + buffer), string_type);
 			final_op[string_type] = '\0';
 			buffer = buffer + string_type;
 
