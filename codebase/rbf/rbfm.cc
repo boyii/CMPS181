@@ -1,6 +1,8 @@
 #include "rbfm.h"
 #include <iostream>
 #include <fstream>
+#include <math.h>
+#include <stdlib.h>
 #include <cstring>
 #include <string>
 
@@ -70,46 +72,45 @@ RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attri
 
 RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor, const void *data) {
 
-	int field_num = ceil(recordDescriptor.size()/8);
-	int buffer = 0;
-	int int_type;
-	int string_type;
-	float float_type;
-	int int_bytes = 4;
-	char * final_op;
+        int field_num = ceil(recordDescriptor.size()/8);
+        int buffer = 0;
+        int int_type;
+        int string_type;
+        float float_type;
+        int int_bytes = 4;
+        char * final_op;
 
-	for (auto j = 0;j < recordDescriptor.size();++j) {
+        for (auto j = 0;j < recordDescriptor.size();++j) {
 
-		if (recordDescriptor.at(j).type == 0) {
-			memcpy(&int_type,((char *) data + buffer), 4); // copy int from data to int_type with byte size 4
-			buffer += 4; //make buffer room
+                if (recordDescriptor.at(j).type == 0) {
+                        memcpy(&int_type,((char *) data + buffer), 4); // copy int from data to int_type with byte size 4
+                        buffer += 4; //make buffer room
 
 
-			cout << recordDescriptor[j].name << ": " << int_type << endl;
-			// int
+                        cout << recordDescriptor[j].name << ": " << int_type << endl;
+                        // int
 
-		}
-		else if (recordDescriptor.at(j).type == 1) {
-			memcpy(&float_type,((char *) data + buffer ),4);
-			buffer = buffer + 4;
-			cout << recordDescriptor[j].name << ": " << float_type << endl;
+                }
+                else if (recordDescriptor.at(j).type == 1) {
+                        memcpy(&float_type,((char *) data + buffer ),4);
+                        buffer = buffer + 4;
+                        cout << recordDescriptor[j].name << ": " << float_type << endl;
 
-			// real
-		}
-		else if (recordDescriptor.at(j).type == 2) {
-			
-			memcpy(&string_type,((char *) data + buffer),4);
-			buffer = buffer + 4;
-			final_op = (char *) malloc(string_type + 1);
-			memcpy((void*) final_op, ((char *)data + buffer), string_type);
-			final_op[string_type] = '\0';
-			buffer = buffer + string_type;
+                        // real
+                }
+                else if (recordDescriptor.at(j).type == 2) {
+                        memcpy(&string_type,((char *) data + buffer),4);
+                        buffer = buffer + 4;
+                        final_op = (char *) malloc(string_type + 1);
+                        memcpy((void*) final_op, ((char *)data + buffer), string_type);
+                        final_op[string_type] = '\0';
+                        buffer = buffer + string_type;
 
-			cout << recordDescriptor[j].name << ": " << final_op << endl;
-			free(final_op);
-			// varchar
-		}
-		
-	return -1;
+                        cout << recordDescriptor[j].name << ": " << final_op << endl;
+                        free(final_op);
+                        // varchar
+                }
+        }
+        return 0;
 
 }
