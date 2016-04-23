@@ -9,6 +9,16 @@
 
 using namespace std;
 
+typedef struct {
+	int pages = 0;
+	int where_to_start_writing = 0;
+	int slot = 0;
+	int space_we_need = 0;
+}PageInfo;
+
+typedef PageInfo *  Page_INFO;
+
+
 // Record ID
 typedef struct
 {
@@ -70,6 +80,13 @@ public:
 class RecordBasedFileManager
 {
 public:
+
+  PageInfo PI;
+
+	int get_space_we_need(const vector<Attribute> &recordDescriptor, const void *data);
+
+	bool endOfPage();
+	
   static RecordBasedFileManager* instance();
 
   RC createFile(const string &fileName);
