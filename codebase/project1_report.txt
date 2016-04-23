@@ -5,8 +5,8 @@ Team number : 7
 
 
 2. Internal Record Format
-- Show your record format design and describe how your design satisfies O(1) field access. If not, just mention that you haven't implemented this feature.
-- Describe how you store a VarChar field.
+- We were planning on using a 2D-vector struct, but were unable to implement this feature. This would have allowed us to index each page and slot number, enabling us to lookup each element in O(1) time. 
+- VarChars were stored by determining the length of the individual string/char array and multiplying that by the bytes containted in a single character of VarChar. 
 
 
 3. Page Format
@@ -46,10 +46,6 @@ Team number : 7
 	
 -rbfm.cc
 	The functions createFile, destroyFile, openFile, and closeFile were all based on creating instances of the already implemented functions in pfm.cc. Each function instantiated PFM and did routine checks to make sure the files were handled correctly. 
+	insertRecord(fileHandle, recordDescriptor, *data, rid) : Depending on which page number is created, we either append a page to the existing pages, to place records in or create an inital page. We then check to see how much memory will be needed for allocation. Then we find the next point available for record writing and insert the record by copying the memory to a usable type. 
+	readRecord(fileHandle, recordDescriptor, rid, *data) : Find a block of memory given by rid and copy that memory onto the data block for reads. 
 	printRecord(recordDiscriptor, *data) : This function works by searching for distinct data type represented within the recordDescriptor's indices, copying them into an interpretable type in memory and printing the associated attribute type out along with its value. 
-	
-	
-
-5. Other (optional)
-- Freely use this section to tell us about other things related to the project 1 (optional)
-
