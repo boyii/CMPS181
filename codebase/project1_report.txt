@@ -1,5 +1,5 @@
 1. Basic information
-Student ID of submitter: 1360826
+Student ID of submitter: 1322145
 Student Name of submitter: Steven Rodriguez
 Team number : 7
 
@@ -45,6 +45,8 @@ Team number : 7
 
 	
 -rbfm.cc
+	The functions createFile, destroyFile, openFile, and closeFile were all based on creating instances of the already implemented functions in pfm.cc. Each function instantiated PFM and did routine checks to make sure the files were handled correctly. 
+	printRecord(recordDiscriptor, *data) : This function works by searching for distinct data type represented within the recordDescriptor's indices, copying them into an interpretable type in memory and printing the associated attribute type out along with its value. 
 	
 	
 
