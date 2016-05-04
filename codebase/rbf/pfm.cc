@@ -1,8 +1,12 @@
-#include "pfm.h"
-#include <fstream>
-#include <sys/stat.h>
+#include <cstdio>
+#include <string>
 
-PagedFileManager* PagedFileManager::_pf_manager = 0;
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include "pfm.h"
+
+PagedFileManager* PagedFileManager::_pf_manager = NULL;
 
 PagedFileManager* PagedFileManager::instance()
 {
@@ -25,54 +29,86 @@ PagedFileManager::~PagedFileManager()
 
 RC PagedFileManager::createFile(const string &fileName)
 {
-   if (ifstream(fileName)){
-	return -1;
-   }
-   ofstream file(fileName);
-   return 0;
+    // If the file already exists, error
+    if (fileExists(fileName))
+        return PFM_FILE_EXISTS;
+
+    // Attempt to open the file for writing
+    FILE *pFile = fopen(fileName.c_str(), "wb");
+    // Return an error if we fail
+    if (pFile == NULL)
+        return PFM_OPEN_FAILED;
+
+    fclose (pFile);
+    return SUCCESS;
 }
 
 
 RC PagedFileManager::destroyFile(const string &fileName)
 {
-    const char* f = fileName.c_str();
-    if(remove(f) != 0){
-	 perror("Error deleting file");
-	 return -1;
-    }
-    puts("File successfully deleted");
-    return 0;
+    // If file cannot be successfully removed, error
+    if (remove(fileName.c_str()) != 0)
+        return PFM_REMOVE_FAILED;
+
+    return SUCCESS;
 }
 
 
 RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
 {
-    const char* f = fileName.c_str();
-    FILE * file = fopen (f, "r+b");
-    if (file == NULL) {
-       return -1;
-    }
-    fileHandle.setFile(file);
-    return 0;
+    // If this handle already has an open file, error
+    if (fileHandle.getfd() != NULL)
+        return PFM_HANDLE_IN_USE;
+
+    // If the file doesn't exist, error
+    if (!fileExists(fileName.c_str()))
+        return PFM_FILE_DN_EXIST;
+
+    // Open the file for reading/writing in binary mode
+    FILE *pFile;
+    pFile = fopen(fileName.c_str(), "rb+");
+    // If we fail, error
+    if (pFile == NULL)
+        return PFM_OPEN_FAILED;
+
+    fileHandle.setfd(pFile);
+
+    return SUCCESS;
 }
 
 
 RC PagedFileManager::closeFile(FileHandle &fileHandle)
 {
-    FILE * f = fileHandle.getFile();
-    if(fclose(f) != 0) { 
-   	 return -1;
-    }
-    return 0;
+    FILE *pFile = fileHandle.getfd();
+
+    // If not an open file, error
+    if (pFile == NULL)
+        return 1;
+
+    // Flush and close the file
+    fclose(pFile);
+
+    fileHandle.setfd(NULL);
+
+    return SUCCESS;
+}
+
+// Check if a file already exists
+bool PagedFileManager::fileExists(const string &fileName)
+{
+    // If stat fails, we can safely assume the file doesn't exist
+    struct stat sb;
+    return stat(fileName.c_str(), &sb) == 0;
 }
 
 
 FileHandle::FileHandle()
 {
-	readPageCounter = 0;
-	writePageCounter = 0;
-	appendPageCounter = 0;
-        file = NULL;
+    readPageCounter = 0;
+    writePageCounter = 0;
+    appendPageCounter = 0;
+
+    _fd = NULL;
 }
 
 
@@ -80,88 +116,92 @@ FileHandle::~FileHandle()
 {
 }
 
-FILE * FileHandle::getFile(){
-	return file;
-}
-  
-RC FileHandle::setFile(FILE *f){
-	file = f;
-	if(file == NULL){
-		return -1;
-	}
-	return 0;
-}
 
 RC FileHandle::readPage(PageNum pageNum, void *data)
 {
-    if(pageNum > getNumberOfPages()){
-	return -1;
-    }
+    // If pageNum doesn't exist, error
+    if (getNumberOfPages() < pageNum)
+        return FH_PAGE_DN_EXIST;
 
-    if(fseek (file, (pageNum * PAGE_SIZE), SEEK_SET) != 0){
-    	return -1;
-    }    
-   
-    int read = fread(data, sizeof(byte), PAGE_SIZE, file);
-    if (read != PAGE_SIZE){	
-       return -1;
-    } 
+    // Try to seek to the specified page
+    if (fseek(_fd, PAGE_SIZE * pageNum, SEEK_SET))
+        return FH_SEEK_FAILED;
 
-    readPageCounter = readPageCounter + 1;
-    return 0;
+    // Try to read the specified page
+    if (fread(data, 1, PAGE_SIZE, _fd) != PAGE_SIZE)
+        return FH_READ_FAILED;
+
+    readPageCounter++;
+    return SUCCESS;
 }
 
 
 RC FileHandle::writePage(PageNum pageNum, const void *data)
 {
-    if(pageNum > getNumberOfPages()){
-	return -1;
+    // Check if the page exists
+    if (getNumberOfPages() < pageNum)
+        return FH_PAGE_DN_EXIST;
+
+    // Seek to the start of the page
+    if (fseek(_fd, PAGE_SIZE * pageNum, SEEK_SET))
+        return FH_SEEK_FAILED;
+
+    // Write the page
+    if (fwrite(data, 1, PAGE_SIZE, _fd) == PAGE_SIZE)
+    {
+        // Immediately commit changes to disk
+        fflush(_fd);
+        writePageCounter++;
+        return SUCCESS;
     }
-
-    if(fseek (file, (pageNum * PAGE_SIZE), SEEK_SET) != 0){
-    	return -1;
-    }
-
-    int written = fwrite(data, sizeof(byte), PAGE_SIZE, file);
-    if (written != PAGE_SIZE){	
-       return -1;
-    } 
-
-    fflush(file);
-    writePageCounter = writePageCounter + 1;
-    return 0;
+    
+    return FH_WRITE_FAILED;
 }
 
 
 RC FileHandle::appendPage(const void *data)
 {
-    if(fseek (file, 0, SEEK_END) != 0){
-	return -1;
+    // Seek to the end of the file
+    if (fseek(_fd, 0, SEEK_END))
+        return FH_SEEK_FAILED;
+
+    // Write the new page
+    if (fwrite(data, 1, PAGE_SIZE, _fd) == PAGE_SIZE)
+    {
+        fflush(_fd);
+        appendPageCounter++;
+        return SUCCESS;
     }
-
-    int written = fwrite(data, sizeof(byte), PAGE_SIZE, file);
-    if (written != PAGE_SIZE){	
-       return -1;
-    } 
-
-    fflush(file);
-    appendPageCounter = appendPageCounter + 1;
-    return 0;
+    return FH_WRITE_FAILED;
 }
 
 
 unsigned FileHandle::getNumberOfPages()
 {
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file); 
-    return (size/PAGE_SIZE); 
+    // Use stat to get the file size
+    struct stat sb;
+    if (fstat(fileno(_fd), &sb) != 0)
+        // On error, return 0
+        return 0;
+    // Filesize is always PAGE_SIZE * number of pages
+    return sb.st_size / PAGE_SIZE;
 }
 
 
 RC FileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount)
 {
-	readPageCount = readPageCounter;
-	writePageCount = writePageCounter;
-	appendPageCount = appendPageCounter;
-	return 0;
+    readPageCount   = readPageCounter;
+    writePageCount  = writePageCounter;
+    appendPageCount = appendPageCounter;
+    return SUCCESS;
+}
+
+void FileHandle::setfd(FILE *fd)
+{
+    _fd = fd;
+}
+
+FILE *FileHandle::getfd()
+{
+    return _fd;
 }

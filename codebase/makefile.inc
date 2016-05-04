@@ -1,5 +1,5 @@
 ## For students: change this path to the root of your code if this doesn't work
-CODEROOT =/afs/cats.ucsc.edu/users/s/rbrounle/cmps181/project1/codebase
+CODEROOT = "/afs/cats.ucsc.edu/users/s/rbrounle/cmps181/project1/codebase"
 
 #CC = gcc
 CC = g++
