@@ -629,19 +629,61 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
 }
 
 bool str_scan(CompOp co,void * value, char * str){
-    
-    
-    
+	
+	if(co == EQ_OP) return strcmp(str, (char*) value) == 0;
+
+	else if(co == LT_OP) return strcmp(str, (char*) value) < 0;
+
+	else if(co == GT_OP) return strcmp(str, (char*) value) > 0;
+
+	else if(co == LE_OP) return strcmp(str, (char*) value) <= 0;
+
+	else if( co ==GE_OP) return strcmp(str, (char*) value) >= 0;
+
+	else if( co ==NE_OP) return strcmp(str, (char*) value) != 0;
+
+	else return true;
 }
 
 bool int_scan(CompOp co, void * value, int number){
-    
+
+	int output;
+	memcpy (&output, value, 4);
+	
+	if(co == EQ_OP) return number == output;
+		
+	else if(co ==LT_OP) return number < output;
+		
+	else if(co ==GT_OP) return number > output;
+		
+	else if(co ==LE_OP) return number <= output;
+		
+	else if(co ==GE_OP) return number >= output;
+		
+	else if(co ==NE_OP) return number != output;
+		
+	else if(co ==NO_OP) return true;
+
     
 }
 
 bool float_scan(CompOp co, void* value, float fl){
-    
-    
+    float output;
+	memcpy (&output, value, 4);
+
+	if(co == EQ_OP) return fl == output;
+		
+	else if(co ==LT_OP) return fl < output;
+		
+	else if(co ==GT_OP) return fl > output;
+		
+	else if(co ==LE_OP) return fl <= output;
+		
+	else if(co ==GE_OP) return fl >= output;
+		
+	else if(co ==NE_OP) return fl != output;
+		
+	else if(co ==NO_OP) return true;
     
 }
 
