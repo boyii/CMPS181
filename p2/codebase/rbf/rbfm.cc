@@ -535,12 +535,15 @@ bool float_scan(CompOp co, void* value, float fl);
 
 RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor ,const string &conditionAttribute,const CompOp compOp, const void * value, const vector<string> &attributeNames, RBFM_ScanIterator &rbfm_ScanIterator){
   void * page;
+  void * OP;
   int len = 0;
   void * page2 = malloc(PAGE_SIZE);
   vector<RID> RID_vec;
+  vector<int> int_vec;
   vector<void*> mem_vec;
   SlotDirectoryHeader H;
   SlotDirectoryRecordEntry RE;
+  float floater;
   int buffer1 = 0;
   int buffer2 = 0;
   bool qualifies = false;
@@ -560,7 +563,8 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
           page = malloc(RE.length);
           buffer1 = 0;
           memcpy((char *) page, ((char *) page2 + RE.offset), RE.length);
-
+          OP = malloc(RE.length);
+          buffer2 = 0;
           for(int j = 0;j < recordDescriptor.size();j++){
 
            if(doesnt_qualify){break;}
@@ -570,30 +574,34 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
 
              if(recordDescriptor.at(k).type == TypeInt){
 
-              memcpy(&integer, (char *) page + buffer1, 4 );
+              memcpy(&int_block, ((char *) page + buffer1), 4 );
               doesnt_qualify = got_it && !int_scan(compOp,value,int_block);
               if(qualifies ==  true){
-                 memcpy();
+                 memcpy(((char *) OP + buffer2),((char *) page + buffer1), 4 );
                  buffer2 += 4;
               }
               buffer1 += 4;
+              
+              
              else if(recordDescriptor.at(k).type == TypeVarChar){
-                memcpy(len,);
+             	
+                memcpy(len, ((char *) page + buffer1), 4);
                 len++;
                 str_block = (char*) malloc(len);                                                                                                                                                                   528,10        90%
-                memcpy(str_block);
+                memcpy(str_block,((char *) page + buffer1 + 4),len);
                 len--; str_block[len] = '\0';
                 doesnt_qualify = got_it && !str_scan(compOp,value,str_block);
                 if(qualifies == true){
-                  memcpy();
+                  memcpy(((char *) OP + buffer2), ((char *) page + buffer1),len + 4);
                   buffer2 += len + 4;
                 }
                 buffer1 += 4 + len;
+                
              } else if(recordDescriptor.at(k).type == TypeReal){
-                memcpy();
+                memcpy(&float_block,((char *)page + buffer1),4);
                 doesnt_qualify = got_it && !float_scan(compOp,value,float_block);
                 if(qualifies = true){
-                  memcpy();
+                  memcpy(((char *) OP + buffer2), ((char *) page + buffer1),4));
                   buffer2 += 4;
                 }
                 buffer1+= 4;
@@ -606,13 +614,16 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
              rep.slotNum = i;
              rep.pageNum = k;
              rid_vec.push_back(rep);
+             mem_vec.push_back(OP);
+             int_vec.push_back(buffer2);
+             
            }else {
 
-              free();
+              free(OP);
 
             }
 
-         free();
+         free(page);
 
 
        }
@@ -621,8 +632,12 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
 
 
   }
+  
+  rbfm_scanIterator.vec1 = mem_vec;
+  rbfm_scanIterator.vec2 = int_vec;
+  rbfm_scanIterator.vec3 = rid_vec;
 
-  free(page);
+  free(page2);
 
 
   return 0;
