@@ -706,6 +706,45 @@ bool float_scan(CompOp co,const void* value, float fl){
 }
 
 
+RC RBFM_ScanIterator::getNextRecord(RID &rid, void *data){
+ int size_of = rid_vec.size();
+ if(rid_vec.at(size_of).pageNum == current.pageNum && rid_vec.at(size_of).slotNum == current.slotNum){
+   return RBFM_EOF;
+ }
+ if(!started) started = true;
+
+ current = rid_vec.at(index);
+ mem_chunk = mem_vec.at(index);
+ buff = int_vec.at(index);
+ memcpy(data,mem_chunk,buff);
+ index++;
+
+ return 0;
+
+}
+
+
+RC RBFM_ScanIterator::close(){
+ int i = reset();
+ return i;
+}
+
+RC RBFM_ScanIterator::reset(){
+ started = false;
+ index = 0;
+ for(int j = 0;j < int_vec.size();j++){
+  int_vec.pop_back();
+ }
+ for(int z = 0;z < rid_vec.size();z++){
+  rid_vec.pop_back();
+ }
+ for(int i = mem_vec.size() - 1;i >= 0;i--){
+  free(mem_vec.at(i));
+  mem_vec.pop_back();
+ }
+
+ return 0;
+}
 
 
 
