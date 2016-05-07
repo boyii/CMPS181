@@ -587,8 +587,7 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
              	
                 memcpy(&len, ((char *) page + buffer1), 4);
                 str_block = (char *) malloc(len + 1);                
-             //   str_block = (char*) malloc(len + 1);                                                                                                                                                                   528,10        90%
-             //   memcpy(str_block , (char *) page + buffer1 + VARCHAR_LENGTH_SIZE , len );
+
                 memcpy(str_block, (char *) page + buffer1 + 4, len);
 
                 str_block[len] = '\0';
