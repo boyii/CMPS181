@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-
+#include <algorithm>
 #include "rbfm.h"
 
 RecordBasedFileManager* RecordBasedFileManager::_rbf_manager = NULL;
@@ -508,16 +508,16 @@ RC RecordBasedFileManager::readAttribute(FileHandle &fileHandle,const vector<Att
     
        if(recordDescriptor.at(i).type == TypeReal){
          if(recordDescriptor.at(i).name != attributeName){ buffer += 4; }         
-           memcpy(data, (char *) page + buffer ,4 ); 
+           memcpy(data,((char *) page + buffer) ,4 ); 
            k++;
        } else if(recordDescriptor.at(i).type == TypeInt){
          if(recordDescriptor.at(i).name != attributeName){ buffer += 4; }
-          memcpy(data, ( char * ) page + buffer, 4);
+          memcpy(data,( ( char * ) page + buffer), 4);
           k++;
        } else if(recordDescriptor.at(i).type == TypeVarChar){
-          memcpy(&len, (char *) page + buffer, len + VARCHAR_LENGTH_SIZE);
+          memcpy(&len, ((char *) page + buffer), len + VARCHAR_LENGTH_SIZE);
           if(recordDescriptor.at(i).name != attributeName){ buffer += len + VARCHAR_LENGTH_SIZE; }
-            memcpy(data, (char *) page + buffer, len + VARCHAR_LENGTH_SIZE);
+            memcpy(data, ((char *) page + buffer), len + VARCHAR_LENGTH_SIZE);
             k++;
        }
        
@@ -528,17 +528,17 @@ RC RecordBasedFileManager::readAttribute(FileHandle &fileHandle,const vector<Att
    return 0;
 }
 
-bool str_scan(CompOp co,void * value, char * str);
-bool int_scan(CompOp co, void * value, int number);
-bool float_scan(CompOp co, void* value, float fl);
+bool str_scan(CompOp co,const void * value, char * str);
+bool int_scan(CompOp co,const  void * value, int number);
+bool float_scan(CompOp co,const void* value, float fl);
 
 
 RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor ,const string &conditionAttribute,const CompOp compOp, const void * value, const vector<string> &attributeNames, RBFM_ScanIterator &rbfm_ScanIterator){
   void * page;
   void * OP;
-  int len = 0;
+  unsigned len;
   void * page2 = malloc(PAGE_SIZE);
-  vector<RID> RID_vec;
+  vector<RID> rid_vec;
   vector<int> int_vec;
   vector<void*> mem_vec;
   SlotDirectoryHeader H;
@@ -559,7 +559,7 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
        RE = getSlotDirectoryRecordEntry(page,k);
 
        if(RE.status == 1){
-
+          floater++;
           page = malloc(RE.length);
           buffer1 = 0;
           memcpy((char *) page, ((char *) page2 + RE.offset), RE.length);
@@ -583,13 +583,16 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
               buffer1 += 4;
               
               
-             else if(recordDescriptor.at(k).type == TypeVarChar){
+              }else if(recordDescriptor.at(k).type == TypeVarChar){
              	
-                memcpy(len, ((char *) page + buffer1), 4);
-                len++;
-                str_block = (char*) malloc(len);                                                                                                                                                                   528,10        90%
-                memcpy(str_block,((char *) page + buffer1 + 4),len);
-                len--; str_block[len] = '\0';
+                memcpy(&len, ((char *) page + buffer1), 4);
+                str_block = (char *) malloc(len + 1);                
+             //   str_block = (char*) malloc(len + 1);                                                                                                                                                                   528,10        90%
+             //   memcpy(str_block , (char *) page + buffer1 + VARCHAR_LENGTH_SIZE , len );
+                memcpy(str_block, (char *) page + buffer1 + 4, len);
+
+                str_block[len] = '\0';
+
                 doesnt_qualify = got_it && !str_scan(compOp,value,str_block);
                 if(qualifies == true){
                   memcpy(((char *) OP + buffer2), ((char *) page + buffer1),len + 4);
@@ -600,8 +603,8 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
              } else if(recordDescriptor.at(k).type == TypeReal){
                 memcpy(&float_block,((char *)page + buffer1),4);
                 doesnt_qualify = got_it && !float_scan(compOp,value,float_block);
-                if(qualifies = true){
-                  memcpy(((char *) OP + buffer2), ((char *) page + buffer1),4));
+                if(qualifies == true){
+                  memcpy(((char *) OP + buffer2), ((char *) page + buffer1),4);
                   buffer2 += 4;
                 }
                 buffer1+= 4;
@@ -633,9 +636,9 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
 
   }
   
-  rbfm_scanIterator.vec1 = mem_vec;
-  rbfm_scanIterator.vec2 = int_vec;
-  rbfm_scanIterator.vec3 = rid_vec;
+  rbfm_ScanIterator.mem_vec = mem_vec;
+  rbfm_ScanIterator.int_vec = int_vec;
+  rbfm_ScanIterator.rid_vec = rid_vec;
 
   free(page2);
 
@@ -643,7 +646,7 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
   return 0;
 }
 
-bool str_scan(CompOp co,void * value, char * str){
+bool str_scan(CompOp co,const void * value, char * str){
 	
 	if(co == EQ_OP) return strcmp(str, (char*) value) == 0;
 
@@ -657,10 +660,10 @@ bool str_scan(CompOp co,void * value, char * str){
 
 	else if( co ==NE_OP) return strcmp(str, (char*) value) != 0;
 
-	else return true;
+	else{} return true;
 }
 
-bool int_scan(CompOp co, void * value, int number){
+bool int_scan(CompOp co,const  void * value, int number){
 
 	int output;
 	memcpy (&output, value, 4);
@@ -677,12 +680,13 @@ bool int_scan(CompOp co, void * value, int number){
 		
 	else if(co ==NE_OP) return number != output;
 		
-	else if(co ==NO_OP) return true;
+	else if(co ==NO_OP){}
+         return true;
 
     
 }
 
-bool float_scan(CompOp co, void* value, float fl){
+bool float_scan(CompOp co,const void* value, float fl){
     float output;
 	memcpy (&output, value, 4);
 
@@ -698,7 +702,7 @@ bool float_scan(CompOp co, void* value, float fl){
 		
 	else if(co ==NE_OP) return fl != output;
 		
-	else if(co ==NO_OP) return true;
+	else if(co ==NO_OP){}  return true;
     
 }
 

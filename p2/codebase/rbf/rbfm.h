@@ -66,6 +66,7 @@ typedef struct SlotDirectoryHeader
 // Negative offset => length = page #, offset = -slot #
 typedef struct SlotDirectoryRecordEntry
 {
+    int status = 0;
     uint32_t length; 
     int32_t offset;
 } SlotDirectoryRecordEntry;
@@ -102,6 +103,9 @@ public:
   // "data" follows the same format as RecordBasedFileManager::insertRecord().
   RC getNextRecord(RID &rid, void *data) { return RBFM_EOF; };
   RC close() { return -1; };
+  vector<int> int_vec;
+  vector<RID> rid_vec;
+  vector<void *> mem_vec;
 };
 
 
