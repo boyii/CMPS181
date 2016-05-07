@@ -1,4 +1,4 @@
-CODEROOT = /afs/cats.ucsc.edu/users/s/rbrounle/cmps181/p2/codebase
+CODEROOT = /afs/cats.ucsc.edu/users/s/rbrounle/cmps181/project1/p2/codebase
 
 #CC = gcc
 CC = g++

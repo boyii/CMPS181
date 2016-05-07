@@ -3,6 +3,7 @@
 #define _rm_h_
 
 #include <string>
+#include <string.h>
 #include <vector>
 
 #include "../rbf/rbfm.h"
@@ -10,6 +11,17 @@
 using namespace std;
 
 # define RM_EOF (-1)  // end of a scan operator
+# define RM_MALLOC_FAILED (2)
+
+# define COLUMN_ID     2
+# define COLUMN_NAME   "column-name"
+# define COLUMN_TYPE   "column-type"
+# define COLUMN_LENGTH   "column-length"
+
+# define TABLE_NUMBER_ID     1 
+# define TABLE_NAME   "table-name"
+# define TABLE_ID   "table-id"
+# define TABLE_FILE   "file-name"
 
 // RM_ScanIterator is an iteratr to go through tuples
 class RM_ScanIterator {
@@ -28,7 +40,7 @@ class RelationManager
 {
 public:
   static RelationManager* instance();
-
+  
   RC createCatalog();
 
   RC deleteCatalog();
@@ -36,6 +48,12 @@ public:
   RC createTable(const string &tableName, const vector<Attribute> &attrs);
 
   RC deleteTable(const string &tableName);
+
+  int getTableIndex(const string &tableName);
+
+  RC setColumnData(const string &tableName, vector<Attribute> columAttr, const void * data, int id, int offset);
+
+  RC setTableData(const string &tableName, const void * data, int id, int offset);
 
   RC getAttributes(const string &tableName, vector<Attribute> &attrs);
 
@@ -68,8 +86,16 @@ protected:
 
 private:
   static RelationManager *_rm;
-};
+  static RecordBasedFileManager* rbfm; 
+  unsigned int index;
+  FileHandle f;
+  const string* tables_filename;
+  const string* columns_filename;
+  };
 
   vector<Attribute> getTableAttr();
-  vector<Attribute> getColumAttr();
+  
+  vector<Attribute> getColumAttr(); 
+
+
 #endif
