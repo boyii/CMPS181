@@ -1,9 +1,6 @@
 make clean
-rm *.tbl
-rm Columns.clm
 make
 ./rmtest_create_tables
-./rmtest_delete_tables
 ./rmtest_00
 ./rmtest_01
 ./rmtest_02
@@ -16,3 +13,9 @@ make
 ./rmtest_09
 ./rmtest_10
 ./rmtest_11
+./rmtest_12
+./rmtest_13
+./rmtest_13b
+./rmtest_14
+./rmtest_15
+./rmtest_delete_tables

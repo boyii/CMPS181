@@ -1,9 +1,9 @@
 #include <cstdio>
 #include <string>
+#include <iostream>
 
-#include <sys/stat.h>
 #include <sys/types.h>
-
+#include <sys/stat.h>
 #include "pfm.h"
 
 PagedFileManager* PagedFileManager::_pf_manager = NULL;
@@ -178,12 +178,14 @@ RC FileHandle::appendPage(const void *data)
 
 unsigned FileHandle::getNumberOfPages()
 {
+    
     // Use stat to get the file size
     struct stat sb;
     if (fstat(fileno(_fd), &sb) != 0)
         // On error, return 0
         return 0;
     // Filesize is always PAGE_SIZE * number of pages
+
     return sb.st_size / PAGE_SIZE;
 }
 

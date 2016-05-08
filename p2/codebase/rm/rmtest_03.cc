@@ -37,6 +37,7 @@ RC TEST_RM_3(const string &tableName, const int nameLength, const string &name, 
     // Test Read Tuple 
     rc = rm->readTuple(tableName, rid, returnedData);
     assert(rc == success && "RelationManager::readTuple() should not fail.");
+    cout << "hasn't failed" << endl;
    
     // Print the tuples 
     cout << "Inserted Data:" << endl;

@@ -477,7 +477,8 @@ RC RecordBasedFileManager::deleteRecord(FileHandle &fileHandle, const vector<Att
    }
    SlotDirectoryRecordEntry empty_replacement;
    setSlotDirectoryRecordEntry( page, rid.slotNum, empty_replacement);  
-    
+   
+   fileHandle.writePage(rid.pageNum, page); 
    free(page);
    return 0;
 }
@@ -486,20 +487,10 @@ RC RecordBasedFileManager::updateRecord(FileHandle &fileHandle, const vector<Att
   int i = deleteRecord(fileHandle,recordDecriptor,rid);
   if(i != 0) return 1;
   RID rid2;
+  deleteRecord(fileHandle, recordDecriptor, rid);
   insertRecord(fileHandle, recordDecriptor, data, rid2);
 
-  if(rid2.slotNum != rid.slotNum || rid2.pageNum != rid.pageNum){
-
-   void * page = malloc(PAGE_SIZE);
-   fileHandle.readPage(rid.pageNum, page);
-
-   SlotDirectoryRecordEntry SDRE;
-   setSlotDirectoryRecordEntry(page, rid.slotNum, SDRE);
-   fileHandle.writePage(rid.pageNum, page);
-   free(page);
-   return 0;
-  }
-  else  return 0;
+  return 0;
 }
 
 RC RecordBasedFileManager::readAttribute(FileHandle &fileHandle,const vector<Attribute> &recordDescriptor, const RID &rid, const string &attributeName, void * data){
@@ -548,8 +539,9 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
   SlotDirectoryHeader H;
   SlotDirectoryRecordEntry RE;
   float floater;
+
   int buffer1 = 0;
-  int buffer2 = 0;
+  int buffer2 = 0; 
   bool qualifies = false;
   bool doesnt_qualify = false;
   char * str_block;
@@ -564,7 +556,7 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
      for(int k = 0;k < H.recordEntriesNumber;k++){
 
        RE = getSlotDirectoryRecordEntry(page2,k);
-
+       
        if(RE.status == 1){
           floater++;
           page = malloc(RE.length);
@@ -578,7 +570,7 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
              qualifies = (find(attributeNames.begin(), attributeNames.end(),recordDescriptor.at(j).name)!= attributeNames.end()) ;
 ///// swap  
              bool got_it = recordDescriptor.at(j).name.compare(conditionAttribute) == 0;
-
+		
              if(recordDescriptor.at(k).type == TypeInt){
 
               memcpy(&int_block, ((char *) page + buffer1), 4 );
@@ -594,7 +586,7 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
              	
                 memcpy(&len, ((char *) page + buffer1), 4);
                 str_block = (char *) malloc(len + 1);                
-
+                cout << len << endl;
                 memcpy(str_block, (char *) page + buffer1 + 4, len);
 
                 str_block[len] = '\0';
@@ -753,8 +745,3 @@ RC RBFM_ScanIterator::reset(){
 
  return 0;
 }
-
-
-
-
-
