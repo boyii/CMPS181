@@ -109,7 +109,6 @@ RC RelationManager::createCatalog()
     if(setTableData("Columns", tableData, COLUMN_ID) != 0){
 	return -1;
     }
-   cout<<"here" << endl; 
     rbfm->insertRecord(f2, tableAttr, tableData, rid);
     rbfm->closeFile(f2);
 
@@ -120,7 +119,6 @@ RC RelationManager::createCatalog()
     if(rbfm->openFile("Columns.clm", f2) != 0){
     	return -1;
     }    
-   cout<<"here" << endl; 
     vector<Attribute> columAttr = getColumAttr();
     int count = 0;
     void * colData = malloc(PAGE_SIZE);
@@ -326,18 +324,15 @@ int RelationManager::getTableIndex(const string &tableName){
     	return -1;
     }
     
-    cout << endl << "intbleid1" << endl;
     vector<string> projAttr;
 	projAttr.push_back(TABLE_ID);
 	projAttr.push_back(TABLE_FILE);
 	projAttr.push_back(TABLE_NAME);
 
-    cout << endl << "intableid2" << endl;
     RBFM_ScanIterator s;    
     void * data = malloc(INT_SIZE);
     RID r;
    
-    cout << endl << "int4" << endl;
     if(rbfm->scan(fileHandle, getTableAttr(), "table-name", EQ_OP, tableName.c_str(), projAttr, s) != 0){
 	return -1;
     } 
@@ -426,9 +421,10 @@ RC RelationManager::insertTuple(const string &tableName, const void *data, RID &
 
 RC RelationManager::deleteTuple(const string &tableName, const RID &rid)
 {
-//    if(tableName.compare() == 0 || tableName.compare() == 0){
-//	return -1;
-//    }    
+    if(tableName.compare("Tables.tbl") == 0 || tableName.compare("Columns.clm") == 0){
+	return -1;
+    } 
+    
 
     std::string table = tableName + ".tbl";
     if(rbfm->openFile(table, f) != 0){
@@ -443,11 +439,11 @@ RC RelationManager::deleteTuple(const string &tableName, const RID &rid)
 
 RC RelationManager::updateTuple(const string &tableName, const void *data, const RID &rid)
 {
-//    if(tableName.compare() == 0 || tableName.compare() == 0){
-//	return -1;
-//    }    
-
-    std::string table = tableName + ".tbl";
+    if(tableName.compare("Tables.tbl") == 0 || tableName.compare("Columns.clm") == 0){
+	return -1;
+    }
+ 
+    string table = tableName + ".tbl";
     if(rbfm->openFile(table, f) != 0){
 	return -1;
     }
@@ -479,7 +475,8 @@ RC RelationManager::readTuple(const string &tableName, const RID &rid, void *dat
 
 RC RelationManager::printTuple(const vector<Attribute> &attrs, const void *data)
 {
-    return -1;
+    if(rbfm->printRecord(attrs, data) != 0) return -1;
+    return 0;
 }
 
 RC RelationManager::readAttribute(const string &tableName, const RID &rid, const string &attributeName, void *data)
