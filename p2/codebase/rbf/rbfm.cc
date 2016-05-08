@@ -31,6 +31,7 @@ RecordBasedFileManager::~RecordBasedFileManager()
 
 RC RecordBasedFileManager::createFile(const string &fileName) 
 {
+
     // Creating a new paged file.
     if (_pf_manager->createFile(fileName))
         return RBFM_CREATE_FAILED;
@@ -45,10 +46,11 @@ RC RecordBasedFileManager::createFile(const string &fileName)
     FileHandle handle;
     if (_pf_manager->openFile(fileName.c_str(), handle))
         return RBFM_OPEN_FAILED;
+
     if (handle.appendPage(firstPageData))
         return RBFM_APPEND_FAILED;
     _pf_manager->closeFile(handle);
-
+    
     free(firstPageData);
 
     return SUCCESS;
@@ -286,7 +288,7 @@ unsigned RecordBasedFileManager::getRecordSize(const vector<Attribute> &recordDe
     char nullIndicator[nullIndicatorSize];
     memset(nullIndicator, 0, nullIndicatorSize);
     memcpy(nullIndicator, (char*) data, nullIndicatorSize);
-
+    
     // Offset into *data. Start just after null indicator
     unsigned offset = nullIndicatorSize;
     // Running count of size. Initialize to size of header
@@ -295,8 +297,10 @@ unsigned RecordBasedFileManager::getRecordSize(const vector<Attribute> &recordDe
     for (unsigned i = 0; i < (unsigned) recordDescriptor.size(); i++)
     {
         // Skip null fields
-        if (fieldIsNull(nullIndicator, i))
+        if (fieldIsNull(nullIndicator, i)){
+         
             continue;
+        }
         switch (recordDescriptor[i].type)
         {
             case TypeInt:
@@ -308,7 +312,7 @@ unsigned RecordBasedFileManager::getRecordSize(const vector<Attribute> &recordDe
                 offset += REAL_SIZE;
             break;
             case TypeVarChar:
-                uint32_t varcharSize;
+                int varcharSize;
                 // We have to get the size of the VarChar field by reading the integer that precedes the string value itself
                 memcpy(&varcharSize, (char*) data + offset, VARCHAR_LENGTH_SIZE);
                 size += varcharSize;
@@ -340,6 +344,7 @@ void RecordBasedFileManager::setRecordAtOffset(void *page, unsigned offset, cons
     char nullIndicator[nullIndicatorSize];
     memset (nullIndicator, 0, nullIndicatorSize);
     memcpy(nullIndicator, (char*) data, nullIndicatorSize);
+
 
     // Points to start of record
     char *start = (char*) page + offset;
@@ -522,7 +527,6 @@ RC RecordBasedFileManager::readAttribute(FileHandle &fileHandle,const vector<Att
        }
        
        if(recordDescriptor.at(i).name == attributeName){ break; }
-      // cout<< k << endl;
    }
    free(page);
    return 0;
@@ -552,11 +556,14 @@ RC RecordBasedFileManager::scan(FileHandle &fileHandle, const vector<Attribute> 
   int int_block;
   float float_block;
 
+ 
   for(int i = 0;i < fileHandle.getNumberOfPages();i++){
-     H = getSlotDirectoryHeader(page);
+     fileHandle.readPage(i,page2);
+     H = getSlotDirectoryHeader(page2);
+
      for(int k = 0;k < H.recordEntriesNumber;k++){
 
-       RE = getSlotDirectoryRecordEntry(page,k);
+       RE = getSlotDirectoryRecordEntry(page2,k);
 
        if(RE.status == 1){
           floater++;
@@ -708,6 +715,7 @@ bool float_scan(CompOp co,const void* value, float fl){
 
 RC RBFM_ScanIterator::getNextRecord(RID &rid, void *data){
  int size_of = rid_vec.size();
+ if(size_of == 0) return RBFM_EOF;
  if(rid_vec.at(size_of).pageNum == current.pageNum && rid_vec.at(size_of).slotNum == current.slotNum){
    return RBFM_EOF;
  }
