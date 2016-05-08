@@ -18,6 +18,7 @@ using namespace std;
 # define COLUMN_TYPE   "column-type"
 # define COLUMN_LENGTH   "column-length"
 
+# define TABLE_FILE_END  ".t"
 # define TABLE_NUMBER_ID     1 
 # define TABLE_NAME   "table-name"
 # define TABLE_ID   "table-id"
@@ -51,9 +52,9 @@ public:
 
   int getTableIndex(const string &tableName);
 
-  RC setColumnData(const string &tableName, vector<Attribute> columAttr, const void * data, int id, int offset);
+  RC setColumnData(const string &tableName, vector<Attribute> columAttr, const void * data, int id);
 
-  RC setTableData(const string &tableName, const void * data, int id, int offset);
+  RC setTableData(const string &tableName, const void * data, int table_id);
 
   RC getAttributes(const string &tableName, vector<Attribute> &attrs);
 
