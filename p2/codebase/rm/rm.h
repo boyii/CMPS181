@@ -88,10 +88,6 @@ protected:
 private:
   static RelationManager *_rm;
   static RecordBasedFileManager* rbfm; 
-  unsigned int index;
-  FileHandle f;
-  const string* tables_filename;
-  const string* columns_filename;
   };
 
   vector<Attribute> getTableAttr();

@@ -17,72 +17,65 @@ RelationManager* RelationManager::instance()
 RelationManager::RelationManager()
 {
     rbfm = RecordBasedFileManager::instance();
-    index = 0;
-    tables_filename = NULL;
-    columns_filename = NULL;
 }
 
 RelationManager::~RelationManager(){}
 
 vector<Attribute> getTableAttr(){
 
-        vector<Attribute> tables_attrs;
+    //make table attributes
+    vector<Attribute> table;
+	Attribute tab1, tab2, tab3;    
+	tab1.name = TABLE_ID;
+	tab1.type = TypeInt;
+	tab1.length = (AttrLength)INT_SIZE;
 
-	Attribute attr;
-	attr.name = TABLE_ID;
-	attr.type = TypeInt;
-	attr.length = (AttrLength)INT_SIZE;
-	tables_attrs.push_back(attr);
+	tab2.name = TABLE_NAME;
+	tab2.type = TypeVarChar;
+	tab2.length = (AttrLength)40;
 
-	attr.name = TABLE_NAME;
-	attr.type = TypeVarChar;
-	attr.length = (AttrLength)40;
-	tables_attrs.push_back(attr);
+	tab3.name = TABLE_FILE;
+	tab3.type = TypeVarChar;
+	tab3.length = (AttrLength)40;
 
-	attr.name = TABLE_FILE;
-	attr.type = TypeVarChar;
-	attr.length = (AttrLength)40;
-	tables_attrs.push_back(attr);
-
-	return tables_attrs;
+	table.push_back(tab1);
+	table.push_back(tab2);
+	table.push_back(tab3);
+	return table;
 }
 
 vector<Attribute> getColumAttr(){   
-    Attribute col1, col2, col3, col4, col5;
-    col1.name = "column-id";
-    col1.type = TypeInt;
-    col1.length = INT_SIZE;
-    col2.name = "column-name";
-    col2.type = TypeVarChar;
-    col2.length = VARCHAR_LENGTH_SIZE;
-    col3.name = "column-type";
-    col3.type = TypeInt;
-    col3.length = INT_SIZE;
-    col4.name = "column-length";
-    col4.type = TypeInt;
-    col4.length = INT_SIZE;
-    col5.name = "column-position";
-    col5.type = TypeInt;
-    col5.length = INT_SIZE;
+	    Attribute col1, col2, col3, col4, col5;
+	    col1.name = "column-id";
+	    col1.type = TypeInt;
+	    col1.length = INT_SIZE;
+	    col2.name = "column-name";
+	    col2.type = TypeVarChar;
+	    col2.length = VARCHAR_LENGTH_SIZE;
+	    col3.name = "column-type";
+	    col3.type = TypeInt;
+	    col3.length = INT_SIZE;
+	    col4.name = "column-length";
+	    col4.type = TypeInt;
+	    col4.length = INT_SIZE;
+	    col5.name = "column-position";
+	    col5.type = TypeInt;
+	    col5.length = INT_SIZE;
 
-    std::vector<Attribute> column;
-    column.push_back(col1);
-    column.push_back(col2);
-    column.push_back(col3);
-    column.push_back(col4);
-    column.push_back(col5);
-    
-    return column;
+	    std::vector<Attribute> column;
+	    column.push_back(col1);
+	    column.push_back(col2);
+	    column.push_back(col3);
+	    column.push_back(col4);
+	    column.push_back(col5);
+	    
+	    return column;
 }
 
 RC RelationManager::createCatalog()
 {
     vector<Attribute> table = getTableAttr();
     vector<Attribute> colum = getColumAttr();   
-
-//    if(getTableIndex("Tables") == 0){
-//	return -1;
-//    }
 
     if(rbfm->createFile("Tables.tbl") != 0){
 	return -1;	
@@ -118,7 +111,8 @@ RC RelationManager::createCatalog()
 
     if(rbfm->openFile("Columns.clm", f2) != 0){
     	return -1;
-    }    
+    }   
+ 
     vector<Attribute> columAttr = getColumAttr();
     int count = 0;
     void * colData = malloc(PAGE_SIZE);
@@ -188,6 +182,7 @@ RC RelationManager::setColumnData(const string &tableName, vector<Attribute> col
 
     int offset = int(ceil((double)5  / CHAR_BIT));
     int realId = id;
+
     memcpy ((char*) data + offset, &realId, INT_SIZE);
     offset += INT_SIZE;
 
@@ -238,7 +233,7 @@ RC RelationManager::createTable(const string &tableName, const vector<Attribute>
     if (colData == NULL) return RM_MALLOC_FAILED;
     RID colRid;
 
-    if(rbfm->openFile("Columns.clm", f) != 0){
+    if(rbfm->openFile("Columns.clm", f2) != 0){
 	return -1;
     }
     
@@ -246,9 +241,9 @@ RC RelationManager::createTable(const string &tableName, const vector<Attribute>
     	if(setColumnData(tableName, columAttr, colData, i) != 0){
 		return -1;
         }
-    	rbfm->insertRecord(f, columAttr, colData, colRid);
+    	rbfm->insertRecord(f2, columAttr, colData, colRid);
     }
-    rbfm->closeFile(f);
+    rbfm->closeFile(f2);
     free(data);
     free(colData);
     
@@ -267,51 +262,53 @@ RC RelationManager::deleteTable(const string &tableName)
     }
 
     unsigned index = getTableIndex(tableName);
-
-    std::string table;
+    FileHandle f;
+  
+    string table;
     if(!catalog){
-	table = tableName + ".tbl";    
+	    table = tableName + ".tbl";    
+	  
+	    if(rbfm->destroyFile(table) != 0){
+		return -1;
+	    }
+
+	    if(rbfm->openFile("Tables.tbl", f) != 0){
+		return -1;
+	    }
+	   
+	   cout << "made it" << endl; 
+	    vector<string> projAttr;
+		projAttr.push_back(TABLE_ID);
+	    RBFM_ScanIterator s;
+	    if(rbfm->scan(f, getTableAttr(), TABLE_ID, EQ_OP, &index, projAttr, s) != 0){
+		    return -4;
+	    }
+
+	    void * data = malloc(INT_SIZE);
+	    RID r; 
+	    s.getNextRecord(r, data);
+	    rbfm->deleteRecord(f, getTableAttr(), r);
+	    rbfm->closeFile(f);
+	    s.close();
+
+	 
+	    if(rbfm->openFile("Columns.clm", f) != 0) return -2;
+	    RBFM_ScanIterator s2;
+	    if(rbfm->scan(f, getColumAttr(), TABLE_ID, EQ_OP, &index, projAttr, s2) != 0){
+		return 4;
+	    }
+		
+
+	    RID rid2;
+	    void * data2 = malloc(INT_SIZE);
+	    while(s2.getNextRecord(rid2, data2) != RBFM_EOF){
+		rbfm->deleteRecord(f, getColumAttr(), rid2);
+	    }
+	    rbfm->closeFile(f);
+	    s2.close();
     }else{
 	table = tableName;
     }
-
-    if(rbfm->destroyFile(table) != 0){
-	return -1;
-    }
-
-    if(rbfm->openFile("Tables.tbl", f) != 0){
-	return -1;
-    }
-    
-    vector<string> projAttr;
-    	projAttr.push_back(TABLE_ID);
-    RBFM_ScanIterator s;
-    if(rbfm->scan(f, getTableAttr(), TABLE_ID, EQ_OP, &index, projAttr, s) != 0){
-	return -4;
-    }
-
-    void * data = malloc(INT_SIZE);
-    RID r; 
-    s.getNextRecord(r, data);
-    rbfm->deleteRecord(f, getTableAttr(), r);
-    rbfm->closeFile(f);
-    s.close();
-
- 
-    if(rbfm->openFile("Columns.clm", f) != 0) return -2;
-    RBFM_ScanIterator s2;
-    if(rbfm->scan(f, getColumAttr(), TABLE_ID, EQ_OP, &index, projAttr, s2) != 0){
-	return 4;
-    }
-	
-
-    RID rid2;
-    void * data2 = malloc(INT_SIZE);
-    while(s2.getNextRecord(rid2, data2) != RBFM_EOF){
-	rbfm->deleteRecord(f, getColumAttr(), rid2);
-    }
-    rbfm->closeFile(f);
-    s2.close();
 
     return 0;
 }
@@ -319,8 +316,8 @@ RC RelationManager::deleteTable(const string &tableName)
 int RelationManager::getTableIndex(const string &tableName){
     const vector<Attribute> tableAttr = getTableAttr();
 
-    FileHandle fileHandle;
-    if(rbfm->openFile("Tables.tbl", fileHandle) != 0){
+    FileHandle f;
+    if(rbfm->openFile("Tables.tbl", f) != 0){
     	return -1;
     }
     
@@ -333,7 +330,7 @@ int RelationManager::getTableIndex(const string &tableName){
     void * data = malloc(INT_SIZE);
     RID r;
    
-    if(rbfm->scan(fileHandle, getTableAttr(), "table-name", EQ_OP, tableName.c_str(), projAttr, s) != 0){
+    if(rbfm->scan(f, getTableAttr(), "table-name", EQ_OP, tableName.c_str(), projAttr, s) != 0){
 	return -1;
     } 
 
@@ -393,7 +390,7 @@ RC RelationManager::getAttributes(const string &tableName, vector<Attribute> &at
     }
 
     s.close();
-    if(rbfm->closeFile(f) != 0){
+    if(rbfm->closeFile(f2) != 0){
 	return -1;
     }
     return 0;
@@ -404,7 +401,8 @@ RC RelationManager::insertTuple(const string &tableName, const void *data, RID &
     if(tableName.compare("Tables.tbl") == 0 || tableName.compare("Columns.clm") == 0){
 	return -1;
     } 
-   
+  
+    FileHandle f; 
     vector<Attribute> tableRecordDescriptor;
     getAttributes(tableName, tableRecordDescriptor);
 
@@ -425,7 +423,7 @@ RC RelationManager::deleteTuple(const string &tableName, const RID &rid)
 	return -1;
     } 
     
-
+    FileHandle f;
     std::string table = tableName + ".tbl";
     if(rbfm->openFile(table, f) != 0){
 	return -1;
@@ -442,7 +440,7 @@ RC RelationManager::updateTuple(const string &tableName, const void *data, const
     if(tableName.compare("Tables.tbl") == 0 || tableName.compare("Columns.clm") == 0){
 	return -1;
     }
- 
+    FileHandle f; 
     string table = tableName + ".tbl";
     if(rbfm->openFile(table, f) != 0){
 	return -1;
@@ -459,6 +457,7 @@ RC RelationManager::updateTuple(const string &tableName, const void *data, const
 
 RC RelationManager::readTuple(const string &tableName, const RID &rid, void *data)
 {
+    FileHandle f;
     std::string table = tableName + ".tbl";
     if(rbfm->openFile(table, f) != 0){
 	return -1;
