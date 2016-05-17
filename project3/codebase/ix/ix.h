@@ -90,6 +90,10 @@ class IXFileHandle {
     // Destructor
     ~IXFileHandle();
 
+        RC readPage(PageNum pageNum, void *data);
+        RC writePage(PageNum pageNum, const void *data);
+        RC appendPage(const void *data);
+
 	// Put the current counter values of associated PF FileHandles into variables
 	RC collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount);
 
