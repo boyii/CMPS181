@@ -1,7 +1,7 @@
-
 #include "ix.h"
 
 IndexManager* IndexManager::_index_manager = 0;
+PagedFileManager* IndexManager::_p = 0;
 
 IndexManager* IndexManager::instance()
 {
@@ -13,6 +13,7 @@ IndexManager* IndexManager::instance()
 
 IndexManager::IndexManager()
 {
+    _p = PagedFileManager::instance();
 }
 
 IndexManager::~IndexManager()
@@ -21,22 +22,44 @@ IndexManager::~IndexManager()
 
 RC IndexManager::createFile(const string &fileName)
 {
-    return -1;
+    if(_p->createFile(fileName.c_str()) != 0){
+	return -1;
+    }
+
+    IXFileHandle ixFHandle;
+    if(_p->openFile(fileName.c_str(), ixFHandle.f) != 0){
+	return -1;
+    }
+
+
+    return 0;
 }
 
 RC IndexManager::destroyFile(const string &fileName)
 {
-    return -1;
+    if(_p->destroyFile(fileName) != 0){
+	return -1;
+    } 
+
+    return 0;
 }
 
 RC IndexManager::openFile(const string &fileName, IXFileHandle &ixfileHandle)
 {
-    return -1;
+    if(_p->openFile(fileName, ixfileHandle.f) != 0){
+	return -1;
+    }
+
+    return 0;
 }
 
 RC IndexManager::closeFile(IXFileHandle &ixfileHandle)
 {
-    return -1;
+    if(_p->closeFile(ixfileHandle.f) != 0){
+	return -1;
+    }
+
+    return 0;
 }
 
 RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
@@ -96,6 +119,8 @@ IXFileHandle::~IXFileHandle()
 
 RC IXFileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount)
 {
-    return -1;
+    readPageCount = ixReadPageCounter;
+    writePageCount = ixWritePageCounter;
+    appendPageCount = ixAppendPageCounter;
+    return SUCCESS;
 }
-
