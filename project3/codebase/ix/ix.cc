@@ -31,6 +31,23 @@ RC IndexManager::createFile(const string &fileName)
 	return -1;
     }
 
+    // Append a first page as meta data 
+    void *page = malloc(PAGE_SIZE);
+    ixFHandle.appendPage(page);
+    int i = 0;
+    memcpy(page, &i, INT_SIZE);
+
+    // set up root page
+    void *rootPage = malloc(PAGE_SIZE);
+    ixFHandle.appendPage(rootPage);
+    int j = 1;
+    memcpy(rootPage, &j, INT_SIZE);
+
+    // set up first leaf page
+    void *leafPage = malloc(PAGE_SIZE);
+    ixFHandle.appendPage(leafPage);
+    int k = 2;
+    memcpy(leafPage, &k, INT_SIZE);
 
     return 0;
 }
