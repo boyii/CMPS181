@@ -1,0 +1,85 @@
+This file is intended as an overview of the structure of our B+ tree and 
+a run through of the various function that have to be implemented in high
+level psuedocode.
+
+--- Structure of B+ tree as a whole ---
+
+Each node of the of the tree will be represented as a page. These pages will 
+be "connected" in order to form this tree strutture. These connections however
+will not be made through literal pointers, instead each page will have an integer
+value written into the front beginning of its memory --(pages are represented by
+void* chunks of memory thus the first 4 bytes will be where this values lies)-- this 
+value will represent the pages' number. On the next 4 bytes we will either have a 0 or 1
+depending on whether the node is a leaf or not. After these bytes we have the next four bytes
+represent the number of child nodes(pages). Lets call this amount of children 'x'
+then the next '4 * x' bytes will be the page numbers of the corresponding children.
+Finally we will have an int that will be either 0,1,2,3 where these represent
+
+0 = not written to
+1 = int
+2 = Real 
+3 = VarChar
+
+followed by the key value itself.
+Thus if we have a root node, or page, whos page number is 1 and which has 
+two children with page numbers 2 and 3 and a key value of "key", our page would look like this..
+
+ _____________________
+| 1 | 0 | 2 | 2 | 3   | ----> | page # | leaf? | # of Children | 1st child # | 2nd child # |
+| 3 | "key" |         | ----> | data type | key |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|_____________________|
+
+This entire layout will be contained within a single file, thus each newly created
+IXfile will have a single B+ tree residing within it.
+
+In addition to the tree of pages itself we will also have a seperate MetaData page
+that contains the current root node page number. The page number of this page will
+always be zero. It should also be noted here that this means that the root node can 
+and most likely will change with insertions.
+
+
+--- Functions ---
+
+- createFile: 
+
+In this function we create an instance of a file through pfm's create file method.
+Additionally we also create and intialize our MetaData page, root node/page and 
+first leaf. Finally we append these pages to the our file and thus our inital 
+tree has been made.
+
+- destroyFile
+
+In this function we free all the memory that has been allocated on our file going 
+through each node and freeing the memory accordingly. Finally pfm's destroyFile is called.
+
+- openFile
+
+
+- closeFile
+
+
+- insertEntry
+
+ 
+- deleteEntry
+
+
+- scan 
+
+
+- printBtree
+
+
+
+
+
+
+
+
