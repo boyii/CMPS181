@@ -88,6 +88,55 @@ RC IndexManager::closeFile(IXFileHandle &ixfileHandle)
 
 RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
 {
+    // first we deal with the case where there is only 
+    void * meta = malloc(PAGE_SIZE);
+    ixfileHandle.readPage(0,meta);
+
+    int * pageNumbers = (int *) malloc(INT_SIZE);
+    memcpy(pageNumbers, (char *) meta + 8, INT_SIZE); //now we know how mny pagess we have
+
+    int * root_number = (int *) malloc();
+    memcpy(root_number, (char * ) meta + 4, INT_SIZE);// get out root page number
+
+    if(pageNumbers < 1){ // means we havent filled in the key for the root node
+        void * rootPage = malloc(PAGE_SIZE);
+        ixfileHandle.readPage(root_number, rootPage);
+        int t = 0;
+        switch(attribute.type){
+            case TypeInt:
+                t = 1;
+                break;
+            case TypeReal:
+                t = 2;
+                break;
+            case TypeVarChar:
+                t = 3;
+                break;
+             default:
+              t = 0;
+                 break;
+        }
+
+        memcpy((char *) rootPage + 24, &t,INT_SIZE); // now we know what type of attr we have
+
+        // we do something with the rid, i forgot what
+        //
+
+        memcpy((char *) rootPage + 32, key, sizeof(key)); // now we copy over the data 
+        int update = *pageNumbers;
+        update++;
+        memcpy((char *) meta + 8, &update,INT_SIZE);    // increment the page total on meta page
+
+        ixfileHandle.writePage(*root_number, rootPage); // write the updated page to memory
+        ixfileHandle.writePage(0,meta); // wrte the updated meta page to memory
+
+        free(rootPage);
+        
+        return 0;
+    }
+
+	
+
     return -1;
 }
 
