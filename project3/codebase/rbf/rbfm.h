@@ -108,6 +108,10 @@ public:
   RBFM_ScanIterator();
   ~RBFM_ScanIterator() {};
 
+  vector<void*> getEntries(){
+	return entries;
+  } 
+
   void setEntries(vector<void*> data){
 	entries = data;
   }

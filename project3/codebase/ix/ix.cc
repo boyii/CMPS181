@@ -443,16 +443,16 @@ RC IndexManager::scan(IXFileHandle &ixfileHandle,
     bool LowUnlimited = (lowKey == NULL);    
     bool HighUnlimited = (highKey == NULL);  
 
-    void * rootPage = malloc(PAGE_SIZE);
+    void * metaPage = malloc(PAGE_SIZE);
     unsigned rootId;   
 
     //open up the meta page to find the root
-    if(ixfileHandle.readPage(0, rootPage) != 0){
+    if(ixfileHandle.readPage(0, metaPage) != 0){
 	return -1;
     }
 
     //input root id findings from the meta page to the rootid
-    memcpy(&rootId, rootPage, INT_SIZE);
+    memcpy(&rootId, metaPage, INT_SIZE);
 	
     //run the recursive treeVersal to find the leaf id with the lowest
     //possible leaf value
@@ -577,7 +577,26 @@ unsigned IndexManager::getCorrectChildID(const void * key, void * pageData){
 }
 
 void IndexManager::printBtree(IXFileHandle &ixfileHandle, const Attribute &attribute) const {
+       //this one is not quite working :(
+       
+       vector<string> keys;
+       vector<string> children;
+
+       unsigned rootId;
+       void * metaData = malloc(PAGE_SIZE);
+       ixfileHandle.readPage(0, metaData);
 	
+//       memcpy(&rootId, metaData, INT_SIZE);
+
+//       IX_ScanIterator ixSI;
+//       //to get all of them scan all of them with null values
+//       scan(ixfileHandle, attribute, NULL, NULL, true, true, ixSI);
+//       vector<void*> entries = ixSI.getEntries();
+//       for(unsigned i = 0; i < sizeof(entries); i++){
+//	   cout << (char*) entries[i] << endl;
+//       }
+       
+	      
 }
 
 IX_ScanIterator::IX_ScanIterator()
@@ -598,6 +617,10 @@ RC IX_ScanIterator::getNextEntry(RID &rid, void *key)
 
 RC IX_ScanIterator::setEntriesValues(vector<void*> data){
 	_rbfm_ScanIterator->setEntries(data);
+}
+
+vector<void*> IX_ScanIterator::getEntries(){
+	return _rbfm_ScanIterator->getEntries();
 }
 
 RC IX_ScanIterator::close()

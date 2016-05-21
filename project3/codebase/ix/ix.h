@@ -74,6 +74,7 @@ class IX_ScanIterator {
         // Destructor
         ~IX_ScanIterator();
 
+        vector<void*> getEntries();
         RC setEntriesValues(vector<void*> data);
         // Get next matching entry
         RC getNextEntry(RID &rid, void *key);
