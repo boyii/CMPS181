@@ -53,6 +53,7 @@ class IndexManager {
         ~IndexManager();
 
     private:
+        void RecursiveInsert(IXFileHandle IXFH, void * starting_page, void * key, int keytype, int entry_number);
         int compareKeys(void * entry, const void * key, unsigned type);
         void sortPage1(IXFileHandle &ixfileHandle, void * page);
         void sortPage2(IXFileHandle &ixfileHandle, void * page);
