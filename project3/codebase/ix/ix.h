@@ -57,9 +57,10 @@ class IndexManager {
 
 
 class IX_ScanIterator {
+    friend class RBFM_ScanIterator;
     public:
 
-		// Constructor
+        // Constructor
         IX_ScanIterator();
 
         // Destructor
@@ -70,6 +71,9 @@ class IX_ScanIterator {
 
         // Terminate index scan
         RC close();
+
+    private:
+        RBFM_ScanIterator *_rbfm_ScanIterator;
 };
 
 
