@@ -1,23 +1,36 @@
 1. Basic information
-Team number (e.g., 01) : 
-#1 Submitter ID : 
-#1 Student Name : 
-
+Team number (e.g., 01) : 7
+#1 Submitter ID : 1360510, 1322145, 1360826
+#1 Student Name : Jonathan Balasingham, Steven Rodriguez, Ryan Brounley
 
 
 2. Index Entry Format
 - Show your index entry design (structure). 
+Depending on what kind of attribute was inserted the dessign would take on one of two forms,
 
+For int/real:
+
+| key | left child/sibling | right child/sibling | rid.pageNum | rid.slotnum |
+
+for VarChar: 
+
+| length of varchar | key | left child/sibling | right child/sibling | rid.pageNum | rid.slotnum |
 
 3. Page Format
 - Show your internal-page (non-leaf node) design.
 
-- Show your leaf-page (leaf node) design.
+starting from the first byte:
 
+|page #|type #|# of entries|position of first entry|position of 2nd | position of 3rd|etc... | type of attr|
+| our actual first entry| our actual second entry | etc...|
+
+
+- Show your leaf-page (leaf node) design.
+  our leaf page design was the same but where the entries were stored thee right child and left child were right siblings and left siblings, additionally the leaf page also held rid.pagenum and rid.slotnum
 
 4. Implementation Detail
 - Have you added your own source file (.cc or .h)?
-
+  no additional files, only added helper functions to the given .h
 
 - Other implementation details:
 
@@ -25,3 +38,4 @@ Team number (e.g., 01) :
 5. Other (optional)
 - Freely use this section to tell us about things that are related to the project 3, but not related to the other sections (optional)
 
+   *** see design.txt ***
