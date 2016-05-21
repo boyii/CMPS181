@@ -86,6 +86,232 @@ RC IndexManager::closeFile(IXFileHandle &ixfileHandle)
     return 0;
 }
 
+int MinInd(vector<int> arr){
+    int index = 0;
+    float min = (float) arr[0];
+    for(unsigned i = 0;i < arr.size();i++){
+        if(arr[i] < min){ min = arr[i]; index = i; }
+        else continue;
+    }
+    return index;
+
+}
+
+int MinInd2(vector<float> arr){
+    int index = 0;
+    float min = (float) arr[0];
+    for(unsigned i = 0;i < arr.size();i++){
+        if(arr[i] < min){ min = arr[i]; index = i; }
+        else continue;
+    }
+    return index;
+
+}
+
+
+
+int MinInd3(vector<char *> arr){
+    int index = 0;
+    char * min = arr[0];
+    for(unsigned i = 0;i < arr.size();i++){
+        if(strcmp(min, arr[i]) > 0){ min = arr[i]; index = i; }
+        else continue;
+    }
+    return index;
+
+
+}
+
+
+void IndexManager::sortPage1(IXFileHandle &ixfileHandle, void * page){
+    int * pgN = (int * ) malloc(4);
+    int * entries = (int *) malloc(4);
+    memcpy(entries,(char *) page + 8,4);
+    memcpy(pgN, page,4);
+    int buff = 32;
+
+    vector<int> arr;
+    vector<void *> mem;
+
+    for(int i = 1;i <= *entries;i++){
+        int * indexx = ( int *) malloc(4);
+        void * block = malloc(20);
+        memcpy(block,(char *) page + buff, 20);
+        memcpy(indexx,(char *) page + buff,4);
+        arr.push_back(*indexx);
+        mem.push_back(block);
+        buff+=20;
+        free(indexx);
+    }
+
+    vector<int> arr2;
+    vector<void*> mem2;
+    // now, a highly ineffeccient sorting alg.
+    void * mem_max = mem[0];
+    int place = arr.size();
+    for(int j = 0;j < place;j++){
+        int min = MinInd(arr);
+        void * newBlock = malloc(20);
+        memcpy(newBlock, mem[min], 20);
+        arr2.push_back(arr[min]);
+        mem2.push_back(newBlock);
+
+        free(mem[min]);
+        arr.erase(arr.begin() + min);
+        mem.erase(mem.begin()+ min);
+
+    }
+
+    int buff2 = 32;
+    // we finally write it back to the page 
+    for(int k = 0;k < mem2.size();k++){
+        memcpy((char *) page + buff2, mem2[k],20);
+        free(mem2[k]);
+        buff2+=20;
+    }
+
+}
+
+void IndexManager::sortPage2(IXFileHandle &ixfileHandle, void * page){
+    int * pgN = (int * ) malloc(4);
+    int * entries = (int *) malloc(4);
+
+    memcpy(entries,(char *) page + 8,4);
+    memcpy(pgN, page,4);
+    int buff = 32;
+
+    vector<float> arr;
+    vector<void *> mem;
+
+    for(int i = 1;i <= *entries;i++){
+        float * indexx = ( float *) malloc(4);
+        void * block = malloc(20);
+        memcpy(block,(char *) page + buff, 20);
+        memcpy(indexx,(char *) page + buff,4);
+        arr.push_back(*indexx);
+        mem.push_back(block);
+        buff+=20;
+        free(indexx);
+    }
+
+    vector<float> arr2;
+    vector<void*> mem2;
+    // now, a highly ineffeccient sorting alg.
+    void * mem_max = mem[0];
+    int place = arr.size();
+    for(int j = 0;j < place;j++){
+        int min = MinInd2(arr);
+        void * newBlock = malloc(20);
+        memcpy(newBlock, mem[min], 20);
+        arr2.push_back(arr[min]);
+        mem2.push_back(newBlock);
+
+        free(mem[min]);
+        arr.erase(arr.begin() + min);
+        mem.erase(mem.begin()+ min);
+
+    }
+
+    int buff2 = 32;
+    // we finally write it back to the page 
+    for(int k = 0;k < mem2.size();k++){
+        memcpy((char *) page + buff2, mem2[k],20);
+        free(mem2[k]);
+        buff2+=20;
+    }
+
+
+}
+
+
+void IndexManager::sortPage3(IXFileHandle &ixfileHandle, void * page){
+    int * pgN = (int * ) malloc(4);
+    int * entries = (int *) malloc(4);
+
+    memcpy(entries,(char *) page + 8,4);
+    memcpy(pgN, page,4);
+    int buff = 32;
+
+    vector<char *> arr;
+    vector<void *> mem;
+    unsigned length;
+    memcpy(&length,(char *) page + buff,4);
+    buff += length;
+    for(int i = 1;i <= *entries;i++){
+        char * indexx = ( char *) malloc(length+1);
+        void * block = malloc(16+ length + 1);
+        memcpy(block,(char *) page + buff,length+ 17 );
+        memcpy(indexx,(char *) page + buff,length + 1);
+        indexx[length] = '\0';
+        arr.push_back(indexx);
+        mem.push_back(block);
+        buff+=20;
+    }
+
+    vector<char *> arr2;
+    vector<void*> mem2;
+    // now, a highly ineffeccient sorting alg.
+    void * mem_max = mem[0];
+    int place = arr.size();
+    for(int j = 0;j < place;j++){
+        int min = MinInd3(arr); // we need to change this so it fits var char
+        void * newBlock = malloc(17 + length);
+        memcpy(newBlock, mem[min], 17 + length);
+        arr2.push_back(arr[min]);
+        mem2.push_back(newBlock);
+
+        free(mem[min]);
+        arr.erase(arr.begin() + min);
+        mem.erase(mem.begin()+ min);
+
+    }
+
+    int buff2 = 32 + length;
+    // we finally write it back to the page 
+    for(int k = 0;k < mem2.size();k++){
+        memcpy((char *) page + buff2, mem2[k],16 + length + 1);
+        free(mem2[k]);
+        buff2+= (17+length);
+    }
+
+
+
+}
+
+
+
+
+void IndexManager::sortPage(IXFileHandle &ixfileHandle, unsigned pageNum){ // used to sort the page entries to make it easier to direct traffic down to leaf nodes
+    void * page = malloc(PAGE_SIZE);
+    ixfileHandle.readPage(pageNum,page);
+    int * type = (int *) malloc(4);
+    memcpy(type,(char *) page + 28 ,4); // might need to change 28
+
+    switch(*type){
+        case 0:
+            cout << "err: entry not written to" << endl;
+            return;
+        case 1:
+            sortPage1(ixfileHandle, page); //if key == int
+            break;
+        case 2:
+            sortPage2(ixfileHandle, page); // if key == real
+            break;
+        case 3:
+            sortPage3(ixfileHandle, page); // if key == VarChar
+            break;
+    }
+
+
+    ixfileHandle.writePage(pageNum,page);
+    free(page);
+}
+
+
+
+
+
+
 RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
 {
     // first we deal with the case where there is only 
