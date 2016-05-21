@@ -51,8 +51,14 @@ class IndexManager {
         ~IndexManager();
 
     private:
+        int compareKeys(void * entry, void * key, int type);
+        void sortPage1(IXFileHandle &ixfileHandle, void * page);
+        void sortPage2(IXFileHandle &ixfileHandle, void * page);
+        void sortPage3(IXFileHandle &ixfileHandle, void * page);
+        void sortPage(IXFileHandle &ixfileHandle, unsigned pageNum);
         static IndexManager *_index_manager;
-	static PagedFileManager *_p;
+        static PagedFileManager *_p;
+
 };
 
 

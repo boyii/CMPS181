@@ -86,6 +86,75 @@ RC IndexManager::closeFile(IXFileHandle &ixfileHandle)
     return 0;
 }
 
+
+
+int IndexManager::compareKeys(void * entry, void * key, int type){ // this function comapare
+    int * e;
+    int * k;
+    float * kk;
+    float * ee;
+    int * length;
+    int * length2;
+    char * str;
+    char * keystr;
+    switch(type){
+        case 1:{ // its an int
+            k = (int *) malloc(4);
+            e = (int *) malloc(4);
+            memcpy(e,entry,4);
+            memcpy(k,key,4);
+            if(*e < *k){
+                return -1;
+            } else if (*e > *k){
+                return 1;
+            } else{
+                return 0;
+            }
+
+            free(e);
+            free(k);
+            break;
+        }
+        case 2:{ // its a real
+            kk = (float*) malloc(4);
+            ee = (float *) malloc(4);
+            memcpy(ee,entry,4);
+            memcpy(kk,key,4);
+            if(*ee < *kk){
+                return -1;
+            } else if (*ee > *kk){
+                return 1;
+            } else {
+                return 0;
+            }
+            free(ee);
+            free(kk);
+            break;
+        }
+        case 3:{ // its a var char
+            length =(int *) malloc(4);
+            memcpy(length,entry,4);
+            length2 = (int *) malloc(4);
+            memcpy(length2,key,4);
+            str =(char *) malloc(*length+1);
+            keystr = (char *) malloc(*length2+1);
+            str[*length]  ='\0';
+            keystr[*length2] = '\0';
+            int result = strcmp(str,keystr);
+            free(str);
+            free(length);
+            return result;
+            break;
+        }
+        default:{
+            break;
+        }
+    }
+
+    return -100;
+}
+
+
 int MinInd(vector<int> arr){
     int index = 0;
     float min = (float) arr[0];
@@ -321,7 +390,7 @@ RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attrib
     int * pageNumbers = (int *) malloc(INT_SIZE);
     memcpy(pageNumbers, (char *) meta + 8, INT_SIZE); //now we know how mny pagess we have
 
-    int * root_number = (int *) malloc();
+    int * root_number = (int *) malloc(INT_SIZE);
     memcpy(root_number, (char * ) meta + 4, INT_SIZE);// get out root page number
 
     if(pageNumbers < 1){ // means we havent filled in the key for the root node
