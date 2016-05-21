@@ -372,8 +372,8 @@ void IndexManager::sortPage(IXFileHandle &ixfileHandle, unsigned pageNum){ // us
     free(page);
 }
 
-RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
-{
+RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid){
+
     // first we deal with the case where there is only 
     void * meta = malloc(PAGE_SIZE);
     ixfileHandle.readPage(0,meta);
@@ -381,7 +381,7 @@ RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attrib
     int * pageNumbers = (int *) malloc(INT_SIZE);
     memcpy(pageNumbers, (char *) meta + 8, INT_SIZE); //now we know how mny pagess we have
 
-    int * root_number = (int *) malloc(INT_SIZE);
+    int * root_number = (int *) malloc(4);
     memcpy(root_number, (char * ) meta + 4, INT_SIZE);// get out root page number
 
     if(*pageNumbers < 1){ // means we havent filled in the key for the root node
@@ -403,7 +403,7 @@ RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attrib
                  break;
         }
 
-        memcpy((char *) rootPage + 24, &t,INT_SIZE); // now we know what type of attr we have
+        memcpy((char *) rootPage + 28, &t,INT_SIZE); // now we know what type of attr we have
 
         // we do something with the rid, i forgot what
         //
@@ -413,18 +413,132 @@ RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attrib
         update++;
         memcpy((char *) meta + 8, &update,INT_SIZE);    // increment the page total on meta page
 
-        ixfileHandle.writePage(*root_number, rootPage); // write the updated page to memory
-        ixfileHandle.writePage(0,meta); // wrte the updated meta page to memory
 
+        void * newLeaf = malloc(PAGE_SIZE);
+        int * leaf_page_number = (int *) malloc(4);
+        memcpy(leaf_page_number,(char *) meta + 8,4);
+        int i = *leaf_page_number;
+        i++;
+        memcpy(newLeaf,&i,4);
+        i = 1;
+        memcpy((char *) newLeaf + 4,&i,4);
+        i = 1;
+        memcpy((char *) newLeaf + 8, &i,4);
+
+        int VarCharSize; // figure this out later
+        if(t == 3){
+            VarCharSize =  sizeof(key)/4;
+        } else{ VarCharSize = 4;  }
+
+
+        memcpy((char * ) newLeaf + 28, key, VarCharSize);
+        // left right child are null, buffer 8 bytes
+
+        memcpy((char *) newLeaf + (36 + VarCharSize), &(rid.pageNum),4);
+        memcpy((char *) newLeaf + (40 + VarCharSize), &(rid.slotNum),4);
+        i = 40 + VarCharSize;
+        memcpy((char *) newLeaf + 16, &i,4);
+
+        memcpy((char *) rootPage + (32 + VarCharSize), root_number, 4);
+
+        ixfileHandle.writePage(*root_number, rootPage); // write the updated page to memory
+        ixfileHandle.writePage(0,meta);
+        free(newLeaf);
         free(rootPage);
-        
+        free(leaf_page_number);
         return 0;
+
     }
 
-	
+    void * entry;
+    int t;
+
+
+    // we now search for a place to put our new entry 
+    bool inserted = false;
+    void * our_page = malloc(PAGE_SIZE);
+    ixfileHandle.readPage(*root_number,our_page); // start at the root
+
+    bool get_next = true; // we find which road to the leaf we take when this is finally false
+   // at this point i was supposed to use recursive insert but i couldnt get it to work :( 
 
     return -1;
 }
+
+
+
+
+
+
+void IndexManager::RecursiveInsert(IXFileHandle IXFH, void * starting_page, void * key, int keytype, int entry_number){
+    //decide whether to go left or right
+    // insert if we reach leaf
+
+    void * entry;
+    int buffer = 32;
+    int in_case;
+    bool found = false;
+
+
+// extract our record entry
+while(!found){
+    switch(keytype){
+        case 1:{
+            buffer = (entry_number - 1) * 20;
+            entry = malloc(20);
+            memcpy(entry,(char * ) starting_page + buffer,20);
+        }
+        case 2:{
+            buffer = (entry_number - 1) * 20;
+            entry = malloc(20);
+            memcpy(entry,(char * ) starting_page + buffer,20);
+        }
+        case 3:{
+            for(int i = 0;i < entry_number;i++){
+                memcpy(&in_case,(char *) starting_page + buffer,4);
+                if((i-1) == entry_number){ entry = malloc(20 + in_case); memcpy(entry,(char *) starting_page + buffer, (20 + in_case)); break;   }
+                buffer =  buffer + in_case + 20;
+            }
+
+        }
+
+    }
+
+    int i2 = compareKeys(entry,key,keytype);
+    if(i2 == 1 || i2 == 0) found == true;
+}
+    int next_page_number;
+
+    int i = compareKeys(entry,key,keytype);
+    if(i == -1){
+        // going left    
+        if(keytype == 1 || keytype == 2) memcpy(&next_page_number,(char *) entry + 4, 4);
+        else{
+            int buffer3;
+            memcpy(&buffer3,entry, 4);
+            memcpy(&next_page_number,(char*) entry + (4+buffer3),4);
+
+        }
+    } else{
+        // going right
+        if(keytype == 1 || keytype == 2) memcpy(&next_page_number,(char *) entry + 8, 4);
+        else{
+            int buffer3;
+            memcpy(&buffer3,entry, 4);
+            memcpy(&next_page_number,(char*) entry + (8+buffer3),4);
+
+        }
+
+
+
+    }
+
+    entry_number = 1;
+    IXFH.readPage(next_page_number,starting_page);
+    RecursiveInsert(IXFH,starting_page,key,keytype, entry_number);
+
+}
+
 
 RC IndexManager::deleteEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
 {
