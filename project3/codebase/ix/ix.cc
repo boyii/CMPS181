@@ -542,7 +542,27 @@ while(!found){
 
 RC IndexManager::deleteEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
 {
-    return -1;
+    //uses scan to get to the leaf page
+    IX_ScanIterator ixSI;
+    scan(ixfileHandle, attribute, key, key, true, true, ixSI);
+    vector<void*> deletion = ixSI.getEntries();
+
+    //scan through the page and get all of the entries
+    for(unsigned i = 0; i < sizeof(deletion); i++){
+        void * deletableEntry = deletion[i];
+	unsigned type;
+	memcpy(&type, deletableEntry, INT_SIZE);
+	if(deletableEntry != NULL){
+		//check if entry on the page is the same as the key, and delete it.
+		if(compareKeys(deletableEntry, key, type) == 0){ 
+			void * empty = malloc(PAGE_SIZE);
+       			memcpy(deletableEntry, empty, 25);
+		}
+    	}else{
+		return -1;
+   	 }
+    }
+    return 0;
 }
 
 
