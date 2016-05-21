@@ -321,7 +321,7 @@ RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attrib
     int * pageNumbers = (int *) malloc(INT_SIZE);
     memcpy(pageNumbers, (char *) meta + 8, INT_SIZE); //now we know how mny pagess we have
 
-    int * root_number = (int *) malloc();
+    int * root_number = (int *) malloc(INT_SIZE);
     memcpy(root_number, (char * ) meta + 4, INT_SIZE);// get out root page number
 
     if(pageNumbers < 1){ // means we havent filled in the key for the root node
