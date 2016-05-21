@@ -1,4 +1,6 @@
 #include "ix.h"
+#include <iostream>
+#include <string.h>
 
 IndexManager* IndexManager::_index_manager = 0;
 PagedFileManager* IndexManager::_p = 0;
@@ -88,7 +90,7 @@ RC IndexManager::closeFile(IXFileHandle &ixfileHandle)
 
 
 
-int IndexManager::compareKeys(void * entry, void * key, int type){ // this function comapare
+int IndexManager::compareKeys(void * entry, const void * key, unsigned type){ // this function comapare
     int * e;
     int * k;
     float * kk;
@@ -342,13 +344,7 @@ void IndexManager::sortPage3(IXFileHandle &ixfileHandle, void * page){
         free(mem2[k]);
         buff2+= (17+length);
     }
-
-
-
 }
-
-
-
 
 void IndexManager::sortPage(IXFileHandle &ixfileHandle, unsigned pageNum){ // used to sort the page entries to make it easier to direct traffic down to leaf nodes
     void * page = malloc(PAGE_SIZE);
@@ -376,11 +372,6 @@ void IndexManager::sortPage(IXFileHandle &ixfileHandle, unsigned pageNum){ // us
     free(page);
 }
 
-
-
-
-
-
 RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid)
 {
     // first we deal with the case where there is only 
@@ -393,9 +384,9 @@ RC IndexManager::insertEntry(IXFileHandle &ixfileHandle, const Attribute &attrib
     int * root_number = (int *) malloc(INT_SIZE);
     memcpy(root_number, (char * ) meta + 4, INT_SIZE);// get out root page number
 
-    if(pageNumbers < 1){ // means we havent filled in the key for the root node
+    if(*pageNumbers < 1){ // means we havent filled in the key for the root node
         void * rootPage = malloc(PAGE_SIZE);
-        ixfileHandle.readPage(root_number, rootPage);
+        ixfileHandle.readPage(*root_number, rootPage);
         int t = 0;
         switch(attribute.type){
             case TypeInt:
@@ -449,56 +440,126 @@ RC IndexManager::scan(IXFileHandle &ixfileHandle,
         bool        	highKeyInclusive,
         IX_ScanIterator &ix_ScanIterator)
 {
-    bool LowUnlimited = (lowKey == null);    
-    bool HighUnlimited = (highKey == null);  
+    bool LowUnlimited = (lowKey == NULL);    
+    bool HighUnlimited = (highKey == NULL);  
 
     void * rootPage = malloc(PAGE_SIZE);
     unsigned rootId;   
 
+    //open up the meta page to find the root
     if(ixfileHandle.readPage(0, rootPage) != 0){
 	return -1;
     }
+
+    //input root id findings from the meta page to the rootid
     memcpy(&rootId, rootPage, INT_SIZE);
 	
+    //run the recursive treeVersal to find the leaf id with the lowest
+    //possible leaf value
     unsigned desiredPageId;
-    if(treeVersal(attr, ixFileHandle, rootPage, lowKey, desiredPageId) != 0){
+    if(!LowUnlimited){
+    	if(treeVersal(ixfileHandle, rootId, desiredPageId, lowKey) != 0){
+		return -1;
+    	}
+    }else{
+	if(treeVersal(ixfileHandle, rootId, desiredPageId, 0) != 0){
+		return -1;
+    	}
+    }
+
+    void * lowestLeafPage = malloc(PAGE_SIZE);
+
+    if(ixfileHandle.readPage(desiredPageId, lowestLeafPage) != 0){
 	return -1;
     }
-    free(rootPage);
+    
+    bool nextEntry = true;
+    vector<void*> validEntries;
 
-   
+    //since we've gotten to the lowest valid leaf, we must walk through each
+    //entries' right child until it reaches the highKey!
+    while(nextEntry){
+	RID rid;
+	void * nextEntryData = malloc(PAGE_SIZE);
+
+	//walking through
+	if(ix_ScanIterator.getNextEntry(rid, nextEntryData) != 0){
+		return -1;
+	}
+
+	//figure out the type of entry (varchar, int, real)
+	unsigned type;
+	memcpy(&type, nextEntryData, INT_SIZE);
+
+	if(highKeyInclusive){
+		if(compareKeys(nextEntryData, highKey, type) > -1){
+			validEntries.push_back(nextEntryData);
+		}else{
+			nextEntry = false;
+		}
+	}else{
+		//if its not inclusive on the high level, then all 
+		if(compareKeys(nextEntryData, highKey, type) > 0){
+			validEntries.push_back(nextEntryData);
+		}else{	
+			nextEntry = false;
+		}
+	}
+    } 
+
+    //set the entries values to the scan iterator as the docs request
+    ix_ScanIterator.setEntriesValues(validEntries);
+
     return 0;
 }
 
-RC IndexManager::treeVersal(const Attribute attr, IXFileHandle &ixFHandle, unsigned pageId, unsigned &desiredPageId){
+RC IndexManager::treeVersal(IXFileHandle &ixFHandle, unsigned pageId, unsigned &desiredPageId, const void * lowkey){
 
     void *pageData = malloc(PAGE_SIZE);
 
-    if(ixFileHandle.readpage(pageId, pageData) != 0){
+    //opens the page passed in - first case this is the root
+    if(ixFHandle.readPage(pageId, pageData) != 0){
 	return -1;
     }
 
+    //in the fourth byte slot (4-8) there is an integer that describes what type
+    //of entry it is.
     uint32_t type;
-    memcpy(&type, pageData, INT_SIZE);
+    memcpy(&type, pageData + 4, INT_SIZE);
+
+    //type == 1 implies leaf page, and in this case we found our target. So reset
+    //the desiredPageId to the current page to call in the parent function scan
     if(type == 1){
 	desiredPageId = pageId;
 	free(pageData);
 	return 0;	
     }
 
-    return treeVersal(attr, ixFHandle, key, getCorrectChildID(key, pageData), desiredPageId);
+    //recursive call to traverse to the next child.
+    return treeVersal(ixFHandle, getCorrectChildID(lowkey, pageData), desiredPageId,lowkey);
 }
 
+//chooses which child to choose when traversing from the root to the leaves
+//key is the comparison key for each entry
 unsigned IndexManager::getCorrectChildID(const void * key, void * pageData){
-	unsigned offset = 32;
+	//in hindsight, getNextRecord would've worked in this function.
+
+	//the header ends after 32 bits
+        unsigned offset = 32;
 
 	bool nextEntry = true; 
 	unsigned childPageID;
 	unsigned type;
 	memcpy(&type, pageData + 28, INT_SIZE);
 
+	//test if it is 0 then it is the left most child to say less than all children
+	if(key == 0){
+	   memcpy(&childPageID, (char *) pageData + offset, sizeof(unsigned));
+	   return childPageID;	
+        } 
+   
 	while(nextEntry){
-		if(compareKey(attribute, key, (char*) pageData + offset) < 0){
+		if(compareKeys((char*)pageData + offset, key, type) < 0){
 			memcpy(&childPageID, (char *) pageData + offset, sizeof(unsigned));
 			nextEntry = false;
 		}else{
@@ -516,6 +577,7 @@ unsigned IndexManager::getCorrectChildID(const void * key, void * pageData){
 }
 
 void IndexManager::printBtree(IXFileHandle &ixfileHandle, const Attribute &attribute) const {
+	
 }
 
 IX_ScanIterator::IX_ScanIterator()
@@ -528,7 +590,14 @@ IX_ScanIterator::~IX_ScanIterator()
 
 RC IX_ScanIterator::getNextEntry(RID &rid, void *key)
 {
-    return _rbfm_ScanIterator->getNextRecord(rid, key);
+    if(_rbfm_ScanIterator->getNextRecord(rid, key) != 0){
+	return IX_EOF;
+    }
+    return 0;
+}
+
+RC IX_ScanIterator::setEntriesValues(vector<void*> data){
+	_rbfm_ScanIterator->setEntries(data);
 }
 
 RC IX_ScanIterator::close()

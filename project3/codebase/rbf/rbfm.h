@@ -108,6 +108,9 @@ public:
   RBFM_ScanIterator();
   ~RBFM_ScanIterator() {};
 
+  void setEntries(vector<void*> data){
+	entries = data;
+  }
   // Never keep the results in the memory. When getNextRecord() is called, 
   // a satisfying record needs to be fetched from the file.
   // "data" follows the same format as RecordBasedFileManager::insertRecord().
@@ -130,6 +133,7 @@ private:
   AttrType type;
   unsigned attrIndex;
 
+  vector<void*> entries;
   FileHandle fileHandle;
   vector<Attribute> recordDescriptor;
   string conditionAttribute;

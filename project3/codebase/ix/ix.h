@@ -35,7 +35,7 @@ class IndexManager {
         RC deleteEntry(IXFileHandle &ixfileHandle, const Attribute &attribute, const void *key, const RID &rid);
 
         unsigned getCorrectChildID(const void * key, void * pageData);
-        RC treeVersal(const Attribute attr, IXFileHandle &ixFHandle, unsigned pageId, unsigned &desiredPageId);
+        RC treeVersal(IXFileHandle &ixFHandle, unsigned pageId, unsigned &desiredPageId, const void * lowkey);
         // Initialize and IX_ScanIterator to support a range search
         RC scan(IXFileHandle &ixfileHandle,
                 const Attribute &attribute,
@@ -53,7 +53,7 @@ class IndexManager {
         ~IndexManager();
 
     private:
-        int compareKeys(void * entry, void * key, int type);
+        int compareKeys(void * entry, const void * key, unsigned type);
         void sortPage1(IXFileHandle &ixfileHandle, void * page);
         void sortPage2(IXFileHandle &ixfileHandle, void * page);
         void sortPage3(IXFileHandle &ixfileHandle, void * page);
@@ -74,6 +74,7 @@ class IX_ScanIterator {
         // Destructor
         ~IX_ScanIterator();
 
+        RC setEntriesValues(vector<void*> data);
         // Get next matching entry
         RC getNextEntry(RID &rid, void *key);
 
