@@ -75,7 +75,7 @@ This function closes a file using a file handle to prevent further maniupulation
 
 - insertEntry
 
-This function inserts an entry into an existing leaf/slot. 
+This function inserts an entry into an existing leaf/slot. It is done by evaluating one of two cases: the first being is when no insertions have been made previously in the B + tree, in which ccase the key is inserted into the root node, and the first leaf is made. The info for this first node is stored in that leaf. The second case first evaluates what type of info we are trying to store, finds the current root page and reads it from the file handle, and then it branches out to another function called recursive insert. At this point, the recursive funciton looks through each entry and finds the one that the insertion should be placed in between. At this point we move down one level to the right child of the previous node. We then check to see if this page is a leaf, using the indicator on bytes 4-8 of the page. If it is a leaf, we use a compare keys method to find at which place we should insertt it. We then call sort page in order to fully sort the indexes on the page. 
  
 - deleteEntry
 
