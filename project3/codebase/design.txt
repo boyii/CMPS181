@@ -1,3 +1,9 @@
+Team Number 7
+ID: 
+Ryan Brounley 
+
+
+
 This file is intended as an overview of the structure of our B+ tree and 
 a run through of the various function that have to be implemented in high
 level psuedocode.
@@ -9,7 +15,7 @@ be "connected" in order to form this tree strutture. These connections however
 will not be made through literal pointers, instead each page will have an integer
 value written into the front beginning of its memory --(pages are represented by
 void* chunks of memory thus the first 4 bytes will be where this values lies)-- this 
-value will represent the pages' number. On the next 4 bytes we will either have a 0 or 1
+value will represent the page's number. On the next 4 bytes we will either have a 0 or 1
 depending on whether the node is a leaf or not. After these bytes we have the next four bytes
 represent the number of child nodes(pages). Lets call this amount of children 'x'
 then the next '4 * x' bytes will be the page numbers of the corresponding children.
@@ -39,7 +45,7 @@ two children with page numbers 2 and 3 and a key value of "key", our page would 
 This entire layout will be contained within a single file, thus each newly created
 IXfile will have a single B+ tree residing within it.
 
-In addition to the tree of pages itself we will also have a seperate MetaData page
+In addition to the tree of pages itself, we will also have a seperate MetaData page
 that contains the current root node page number. The page number of this page will
 always be zero. It should also be noted here that this means that the root node can 
 and most likely will change with insertions.
@@ -61,25 +67,25 @@ through each node and freeing the memory accordingly. Finally pfm's destroyFile 
 
 - openFile
 
+This function opens a file with an ixFileHandle for subsequent manipulation. 
 
 - closeFile
 
+This function closes a file using a file handle to prevent further maniupulation. 
 
 - insertEntry
 
+This function inserts an entry into an existing leaf/slot. 
  
 - deleteEntry
 
+This function deletes a leaf level node by traversing through the tree's non-leaf entries, using our compare method to go left or right down the different levels of the tree. Once a leaf node is reached, the amount of siblings on the page are counted and if sufficient, the leaf is removed and the changed fields are updated. 
+
+-treeVersal
+
+This function is a lookup function that recursively traverses the B+ tree and ret
 
 - scan 
 
 
 - printBtree
-
-
-
-
-
-
-
-
