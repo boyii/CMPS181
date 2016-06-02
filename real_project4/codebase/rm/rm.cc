@@ -855,3 +855,89 @@ RC RM_ScanIterator::close()
     rbfm->closeFile(fileHandle);
     return SUCCESS;
 }
+
+ RC RelationManager::createIndex(const string &tableName, const string &attrName){
+     RM_ScanIterator it;
+     _im->createFile(tableName + "_" + attrName + ".t");  
+     
+     IXFileHandle ixfh;
+     _im->openFile(tableName + "_" + attrName + ".t", ixfh);
+     _rm->createCatalog();
+     
+     RID rid;
+     
+     vector<string> vec;
+     vector<Attribute> vec2;
+     
+     Attribute A1;
+     A1.name = attrName;
+     vec.push_back(attrName);
+ 
+     string blank = "";
+     
+     void * data; 
+     void * page = malloc(PAGE_SIZE);
+      
+     scan(tableName, blank, NO_OP, data, vec, it);
+         
+     getAttributes(tableName, vec2);
+             
+     for(int i = 0; i < vec2.size(); i++){
+         bool matched = A1.name.compare(vec2.at(i).name) == 0;
+ 
+         if(matched){ 
+             A1.length = vec2.at(i).length;
+             A1.type = vec2.at(i).type;
+         }
+             
+     }   
+ 
+     while(it.getNextTuple(rid, page) != RBFM_EOF){
+         _im->insertEntry(ixfh, A1, page, rid);
+     }
+         
+     it.close();
+     
+     return 0;
+ }
+     
+ RC RelationManager::destroyIndex(const string &tableName, const string &attrName){
+     return _im->destroyFile(tableName+"_"+attrName+".t");
+ }
+   
+ RC RelationManager::indexScan(const string &tableName, const string &attributeName, const void *lowkey, const void *highkey,bool lowKeyInclusive, bool     highKeyInclusive, RM_IndexScanIterator &rmIt){
+     
+     IXFileHandle ixfh;
+ 
+     _im->openFile(tableName + "_" + attributeName + ".t", ixfh);
+     
+     Attribute A;
+     Attribute comp_A;
+     A.name = attributeName;
+     vector<Attribute> vec_a;
+     
+     getAttributes(tableName, vec_a);
+ 
+     for(int j = 0; j < vec_a.size(); j++){
+         bool found =  A.name.compare(vec_a.at(j).name) == 0;
+ 
+         if(found){ 
+             A.length = vec_a.at(j).length;
+             A.type = vec_a.at(j).type;
+         }
+     }
+ 
+     return _im->scan(ixfh, comp_A, lowkey, highkey, lowKeyInclusive, highKeyInclusive,rmIt.ixsi);
+     
+ }
+
+   
+   
+   
+   
+   
+   
+   
+
+
+
