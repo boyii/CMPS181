@@ -78,7 +78,7 @@ $(CODEROOT)/rbf/librbf.a:
 
 .PHONY: $(CODEROOT)/ix/libix.a
 $(CODEROOT)/ix/libix.a:
-        $(MAKE) -C $(CODEROOT)/ix libix.a
+	$(MAKE) -C $(CODEROOT)/ix libix.a
 
 
 .PHONY: clean

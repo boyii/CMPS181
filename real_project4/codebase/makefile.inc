@@ -1,5 +1,5 @@
 ## For students: change this path to the root of your code
-CODEROOT = /home/tef/cs181/Code/codebase
+CODEROOT = ..
 
 LDLIBS = -lreadline
 
