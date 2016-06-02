@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../rbf/rbfm.h"
+#include "../ix/ix.h"
 
 using namespace std;
 
@@ -52,6 +53,17 @@ typedef struct IndexedAttr
     Attribute attr;
 } IndexedAttr;
 
+ class RM_IndexScanIterator {
+    public:
+         RM_IndexScanIterator();  // Constructor
+         ~RM_IndexScanIterator();  // Destructor
+         RC getNextEntry(RID &rid, void *key){ ixsi.getNextEntry(rid, key);  };  // Get next matching entry
+         RC close( );  // Terminate index scan
+         IX_ScanIterator ixsi;
+};
+
+
+
 // RM_ScanIterator is an iteratr to go through tuples
 class RM_ScanIterator {
 public:
@@ -73,6 +85,20 @@ private:
 class RelationManager
 {
 public:
+
+  RC createIndex(const string &tableName, const string &attributeName);
+
+  RC destroyIndex(const string &tableName, const string &attributeName);
+ 
+  RC indexScan(const string &tableName,
+           const string &attributeName,
+           const void *lowKey,
+           const void *highKey,
+           bool lowKeyInclusive,
+           bool highKeyInclusive,
+           RM_IndexScanIterator &rm_IndexScanIterator);
+
+
   static RelationManager* instance();
 
   RC createCatalog();
