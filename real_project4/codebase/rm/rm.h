@@ -141,6 +141,8 @@ protected:
 
 private:
   static RelationManager *_rm;
+  static IndexManager * _im;
+  static RecordBasedFileManager * _rbfm;
   const vector<Attribute> tableDescriptor;
   const vector<Attribute> columnDescriptor;
 

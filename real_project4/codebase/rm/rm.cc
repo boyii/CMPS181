@@ -5,6 +5,9 @@
 #include <cstring>
 
 RelationManager* RelationManager::_rm = 0;
+IndexManager * RelationManager::_im = 0;
+RecordBasedFileManager * RelationManager::_rbfm = 0;
+
 
 RelationManager* RelationManager::instance()
 {
