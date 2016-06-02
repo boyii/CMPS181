@@ -76,6 +76,10 @@ rmtest_15: rmtest_15.o librm.a $(CODEROOT)/ix/libix.a
 $(CODEROOT)/rbf/librbf.a:
 	$(MAKE) -C $(CODEROOT)/rbf librbf.a
 
+.PHONY: $(CODEROOT)/ix/libix.a
+$(CODEROOT)/ix/libix.a:
+        $(MAKE) -C $(CODEROOT)/ix libix.a
+
 
 .PHONY: clean
 clean:
