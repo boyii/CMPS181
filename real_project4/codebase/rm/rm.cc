@@ -934,9 +934,15 @@ RC RM_ScanIterator::close()
      
  }
 
+ RC RM_IndexScanIterator::getNextEntry(RID &rid, void * key){
+     int i = ixsi.getNextEntry(rid, key);
+     return i;
+ }
    
-   
-   
+RC RM_IndexScanIterator::close(){
+    int i = ixsi.close();
+    return i;
+}
    
    
    

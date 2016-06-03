@@ -57,7 +57,7 @@ typedef struct IndexedAttr
     public:
          RM_IndexScanIterator();  // Constructor
          ~RM_IndexScanIterator();  // Destructor
-         RC getNextEntry(RID &rid, void *key){ ixsi.getNextEntry(rid, key);  };  // Get next matching entry
+         RC getNextEntry(RID &rid, void *key);  // Get next matching entry
          RC close( );  // Terminate index scan
          IX_ScanIterator ixsi;
 };
