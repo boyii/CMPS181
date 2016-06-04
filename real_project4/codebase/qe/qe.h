@@ -1,7 +1,9 @@
 #ifndef _qe_h_
 #define _qe_h_
 
+#include <iostream>
 #include <vector>
+#include <string>
 
 #include "../rbf/rbfm.h"
 #include "../rm/rm.h"
@@ -219,6 +221,10 @@ class Project : public Iterator {
         RC getNextTuple(void *data);
         // For attribute in vector<Attribute>, name it as rel.attr
         void getAttributes(vector<Attribute> &attrs) const;
+
+    private:
+        Iterator * pIt;
+        vector<string> pAttrs;
 };
 
 
