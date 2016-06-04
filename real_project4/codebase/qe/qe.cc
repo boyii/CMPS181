@@ -106,7 +106,6 @@ RC Project::getNextTuple(void *data){
    // pIt->getNextTuple(data);
    return 0; 
 }
-RC Project::getNextTuple(void *data){}
 
 // For attribute in vector<Attribute>, name it as rel.attr
 void Project::getAttributes(vector<Attribute> &attrs) const{
