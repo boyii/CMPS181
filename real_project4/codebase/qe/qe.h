@@ -208,6 +208,8 @@ class Filter : public Iterator {
         Iterator * ItF;
         Condition our_cond;
         vector<Attribute> res;
+        RC verify(Condition &our_cond, void * data, vector<Attribute> R);
+        bool rec_verify(Condition & our_cond, void * data, vector<Attribute> R, bool qual);
 };
 
 
