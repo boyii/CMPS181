@@ -9,8 +9,8 @@ bool Filter::checkScanCondition(char *recordString, CompOp compOp, const char *v
 {
     if (compOp == NO_OP) return true;
     int cmp = strcmp(recordString, value);
-    cout << "cmp inside the function : " << recordString << endl;
-    cout << "were comparing to : " << value  << endl;
+    cout << "our first string (first arg) : " << recordString << endl;
+    cout << "were comparing to (third arg): " << value  << endl;
     switch (compOp)
         {
             case EQ_OP: return cmp == 0;
@@ -153,7 +153,7 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
         valStr1 = (char *) malloc(1 + *newlen);
         cout << "this should not always be 4: " << *newlen << endl;
 //        valStr1 = (char *) l_data + 1 + *newlen;
-        memcpy(valStr1,(char *) l_data +1 + *newlen , *newlen);
+        memcpy(valStr1,(char *) l_data + 5, *newlen); // were testing this
         valStr1[*newlen] = '\0';
         newlen2 = (int *) ((char *) r_data );
         valStr2 = (char *) malloc(*newlen2 + 1);
@@ -163,6 +163,8 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
         cout << "cmp before " << cmp << endl;
         cmp = checkScanCondition(valStr1, our_cond.op, valStr2);
         cout << cmp << endl;
+//        free(valStr2);
+//        free(valStr1);
     }
     bool t = true;
     //cout << "t is : " <<t <<endl;
