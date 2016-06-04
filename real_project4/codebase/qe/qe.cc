@@ -106,7 +106,6 @@ RC Project::getNextTuple(void *data){
    // pIt->getNextTuple(data);
    return 0; 
 }
-RC Project::getNextTuple(void *data){}
 
 // For attribute in vector<Attribute>, name it as rel.attr
 void Project::getAttributes(vector<Attribute> &attrs) const{
@@ -144,6 +143,8 @@ INLJoin::INLJoin(Iterator *leftIn,
 INLJoin::~INLJoin(){}
 
 RC INLJoin::getNextTuple(void *data){
+	_leftIn->getNextTuple(data);
+	_rightIn->getNextTuple();
 	return -1; 
 }
 
@@ -151,10 +152,10 @@ RC INLJoin::getNextTuple(void *data){
 void INLJoin::getAttributes(vector<Attribute> &attrs) const{
 	_leftIn->getAttributes(attrs);
 
-	vector<Attribute> temp;
-	_rightIn->getAttributes(temp);
+	vector<Attribute> SAttrs;
+	_rightIn->getAttributes(SAttrs);
 
 	for(unsigned rightIndex = 0; rightIndex < temp.size(); rightIndex++){
-		attrs.push_back(temp.at(rightIndex));
+		attrs.push_back(SAttrs.at(rightIndex));
 	}
 }
