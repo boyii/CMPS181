@@ -77,7 +77,7 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
     AttrType rType;
     AttrType lType;
     int lf = -1; // so the comparison isnt accidently true
-    int rf = -1;
+    int rf = -2;
     bool matched = false;
     void * l_data;
     void * r_data;
@@ -87,32 +87,25 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
 
 
         if(R.at(i).type == TypeVarChar){
-            uint32_t str_len;
-            memcpy(&str_len,((char *)data + buff), VARCHAR_LENGTH_SIZE);
-            len = VARCHAR_LENGTH_SIZE + str_len;
-//            cout << len << endl;
+            len = *(int *) ((char *) data + buff + 1);
         } else len = 4;
         
-
         if(cond.lhsAttr.compare(R.at(i).name) == 0){
             lf = i;
-        //    cout << "init1" << endl;
             l_data = (char *) data + buff;
             lType = R.at(i).type;
             we_can_use_vars = true;
-        } else
-
-        if(cond.bRhsIsAttr){
+        } else if(cond.bRhsIsAttr){
             cout << "init1" << endl;
             if(cond.rhsAttr.compare(R.at(i).name) == 0){
                 rf = i;
-                cout << "init2" << endl;
                 r_data  = (char * ) data + buff;
                 rType = R.at(i).type;
                 we_can_use_vars = true;
             
             }
         }
+
 
         buff += len;
     }
@@ -152,8 +145,8 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
         valStr2 = (char *) malloc(newlen2 + 1);
         memcpy(valStr2, (char *) l_data + 4, newlen2);
         valStr2[newlen2] = '\0';
-//        cout << valStr2 << endl;
-//        cout << valStr1 << endl;
+        cout << valStr2 << endl;
+        cout << valStr1 << endl;
         cmp = checkScanCondition(valStr1, our_cond.op, valStr2);
     }
 
@@ -225,8 +218,8 @@ INLJoin::INLJoin(Iterator *leftIn,
 INLJoin::~INLJoin(){}
 
 RC INLJoin::getNextTuple(void *data){
-	_leftIn->getNextTuple(data);
-	_rightIn->getNextTuple();
+//	_leftIn->getNextTuple(data);
+//	_rightIn->getNextTuple();
 	return -1; 
 }
 
@@ -237,7 +230,7 @@ void INLJoin::getAttributes(vector<Attribute> &attrs) const{
 	vector<Attribute> SAttrs;
 	_rightIn->getAttributes(SAttrs);
 
-	for(unsigned rightIndex = 0; rightIndex < temp.size(); rightIndex++){
+	for(unsigned rightIndex = 0; rightIndex < SAttrs.size(); rightIndex++){
 		attrs.push_back(SAttrs.at(rightIndex));
 	}
 }
