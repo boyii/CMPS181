@@ -7,10 +7,15 @@ Filter::Filter(Iterator* input, const Condition &condition) {
 }
 
 
-RC Filter::getNextTuple(void *data){}
+RC Filter::getNextTuple(void *data){
+    ItF->getNextTuple(data);
 
-void Filter::getAttributes(vector<Attribute> &attrs)
-const{}
+    return -1;
+}
+
+void Filter::getAttributes(vector<Attribute> &attrs) const{
+    ItF->getAttributes(attrs);
+}
 
 
 Project::Project(Iterator *input, const vector<string> &attrNames){}
