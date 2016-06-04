@@ -2,6 +2,8 @@
 #include "qe.h"
 
 Filter::Filter(Iterator* input, const Condition &condition) {
+    ItF = input;
+    our_cond = condition;
 }
 
 
