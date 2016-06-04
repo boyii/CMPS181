@@ -98,7 +98,7 @@ void Filter::getAttributes(vector<Attribute> &attrs) const{
 Project::Project(Iterator *input, const vector<string> &attrNames){}
 
 
-int Project::getNextTuple(void *data){}
+RC Project::getNextTuple(void *data){}
 
 // For attribute in vector<Attribute>, name it as rel.attr
 void Project::getAttributes(vector<Attribute> &attrs) const{}
