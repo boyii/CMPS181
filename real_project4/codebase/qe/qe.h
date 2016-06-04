@@ -207,7 +207,7 @@ class Filter : public Iterator {
     private:
         bool checkScanCondition(int r, CompOp c, const void * value);
         bool checkScanCondition(float f, CompOp c, const void * value);
-        bool checkScanCondition(char * s, CompOp c, const void * value);
+        bool checkScanCondition(char * s, CompOp c, const char * value);
         Iterator * ItF;
         Condition our_cond;
         vector<Attribute> res;
@@ -240,16 +240,11 @@ class INLJoin : public Iterator {
                IndexScan *rightIn,          // IndexScan Iterator of input S
                const Condition &condition   // Join condition
         );
-        ~INLJoin();
+        ~INLJoin(){};
 
         RC getNextTuple(void *data);
         // For attribute in vector<Attribute>, name it as rel.attr
         void getAttributes(vector<Attribute> &attrs) const;
-
-    private:
-	Iterator *_leftIn;
-	IndexScan *_rightIn;
-	Condition _condition;	
 };
 
 

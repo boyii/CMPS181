@@ -5,16 +5,12 @@
 #include <cstring>
 
 
-bool Filter::checkScanCondition(char *recordString, CompOp compOp, const void *value)
+bool Filter::checkScanCondition(char *recordString, CompOp compOp, const char *value)
 {
-        if (compOp == NO_OP) return true;
-
-    int32_t valueSize;
-    memcpy(&valueSize, value, VARCHAR_LENGTH_SIZE);
-    char valueStr[valueSize + 1];
-    valueStr[valueSize] = '\0';
-    memcpy(valueStr, (char*) value + VARCHAR_LENGTH_SIZE, valueSize);
-    int cmp = strcmp(recordString, valueStr);
+    if (compOp == NO_OP) return true;
+    int cmp = strcmp(recordString, value);
+    cout << "cmp inside the function : " << recordString << endl;
+    cout << "were comparing to : " << value  << endl;
     switch (compOp)
         {
             case EQ_OP: return cmp == 0;
@@ -48,7 +44,11 @@ bool Filter::checkScanCondition(float r, CompOp compOp, const void *value){
 
 bool Filter::checkScanCondition(int recordInt, CompOp compOp, const void * value){
     int32_t intValue;
+    int * real;
+    real = (int *) value;
     memcpy(&intValue, value, INT_SIZE);
+//    cout << intValue << " : " << recordInt <<" : "<< *real << endl;
+    
     switch(compOp){
         case EQ_OP: return recordInt == intValue;
         case LT_OP: return recordInt < intValue;
@@ -77,7 +77,7 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
     AttrType rType;
     AttrType lType;
     int lf = -1; // so the comparison isnt accidently true
-    int rf = -2;
+    int rf = -1;
     bool matched = false;
     void * l_data;
     void * r_data;
@@ -87,16 +87,23 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
 
 
         if(R.at(i).type == TypeVarChar){
-            len = *(int *) ((char *) data + buff + 1);
+            int * str_len;
+            str_len = (int *) ((char*) data + buff + 1);
+//            memcpy(&str_len,((char *)data + buff), VARCHAR_LENGTH_SIZE);
+            len = VARCHAR_LENGTH_SIZE + *str_len;
+          //  cout << len << endl;
         } else len = 4;
         
+
         if(cond.lhsAttr.compare(R.at(i).name) == 0){
             lf = i;
+        //    cout << "init1" << endl;
             l_data = (char *) data + buff;
             lType = R.at(i).type;
             we_can_use_vars = true;
-        } else if(cond.bRhsIsAttr){
-            cout << "init1" << endl;
+        } else
+
+        if(cond.bRhsIsAttr){
             if(cond.rhsAttr.compare(R.at(i).name) == 0){
                 rf = i;
                 r_data  = (char * ) data + buff;
@@ -105,53 +112,65 @@ RC Filter::verify(Condition &cond, void * data, vector<Attribute> R){
             
             }
         }
-
-
+       // cout << "len is : " << len << " buff is: " << buff << endl;
         buff += len;
     }
+    bool test = false;
 
-    if(lf != rf) return -1;
-  
+//    cout << "this is test : " << test << endl;
+//    cout << we_can_use_vars << endl;
+//    if(lType != rType) return -1;
+//            cout << "init1" << endl;
+//    cout << "heres the problem" << endl;
 
     int strlen = 0;
-    bool reset = cond.bRhsIsAttr;
+    bool reset = !cond.bRhsIsAttr;
     if(reset == true){
         r_data = cond.rhsValue.data;
         rType = cond.rhsValue.type;
     }
-    
+
+    if(lType != rType) return -1;
     int valInt;
     float valFl;
     char * valStr1;
     char * valStr2;
-    bool cmp;
-    cout << lType << endl;
+    bool cmp = false;
     if(lType == TypeInt){
-        memcpy(&valInt, l_data, 4);
+        memcpy(&valInt,(char *) l_data + 1, 4);
+        cout << "cmp before : " << cmp << endl;
         cmp = checkScanCondition(valInt,our_cond.op,r_data);
+        cout << "after: " << cmp << endl;
     } else
     if(lType == TypeReal){
-        memcpy(&valFl, l_data,4);
+        memcpy(&valFl,(char *) l_data + 1 ,4);
         cmp = checkScanCondition(valFl, our_cond.op, r_data);
     } else
     if(lType == TypeVarChar){
-        int newlen;
-        int newlen2;
-        memcpy(&newlen, l_data, 4);
-        valStr1 = (char *) malloc(1 + newlen);
-        memcpy(valStr1,(char *) l_data + 4, newlen);
-        valStr1[newlen] = '\0';
-        memcpy(&newlen2, r_data, 4);
-        valStr2 = (char *) malloc(newlen2 + 1);
-        memcpy(valStr2, (char *) l_data + 4, newlen2);
-        valStr2[newlen2] = '\0';
-        cout << valStr2 << endl;
-        cout << valStr1 << endl;
+        int * newlen;
+        int * newlen2;
+        newlen = (int *) ((char *) l_data + 1);
+        valStr1 = (char *) malloc(1 + *newlen);
+        cout << "this should not always be 4: " << *newlen << endl;
+//        valStr1 = (char *) l_data + 1 + *newlen;
+        memcpy(valStr1,(char *) l_data +1 + *newlen , *newlen);
+        valStr1[*newlen] = '\0';
+        newlen2 = (int *) ((char *) r_data );
+        valStr2 = (char *) malloc(*newlen2 + 1);
+//        valStr2 = (char *) r_data  + *newlen2;
+        memcpy(valStr2, (char *) r_data + 4, *newlen2);
+        valStr2[*newlen2] = '\0';
+        cout << "cmp before " << cmp << endl;
         cmp = checkScanCondition(valStr1, our_cond.op, valStr2);
+        cout << cmp << endl;
     }
+    bool t = true;
+    //cout << "t is : " <<t <<endl;
+    int ret = -1;
 
-    int ret;
     if(cmp) ret = 0;
+//    char * a = "the";
+//    cout << a << endl;
 
     return ret;
 }
@@ -161,7 +180,7 @@ RC Filter::getNextTuple(void *data){
     if(i == QE_EOF) return QE_EOF;
 
     int k = verify(our_cond,data, res);
-    if(k != -1) i = getNextTuple(data);
+    if(k == -1) i = getNextTuple(data);
 
     return i;
 }
@@ -174,6 +193,7 @@ void Filter::getAttributes(vector<Attribute> &attrs) const{
 Project::Project(Iterator *input, const vector<string> &attrNames){
     this->pIt = input;
     pAttrs = attrNames;
+
 }
 
 
@@ -206,31 +226,12 @@ void Project::getAttributes(vector<Attribute> &attrs) const{
 
 INLJoin::INLJoin(Iterator *leftIn,
 		 IndexScan *rightIn,
-		 const Condition &condition){
-	_leftIn = leftIn;
-	_rightIn = rightIn;
-	_condition = condition;
-}
-//  For each tuple r in R do
-//     For each tuple s in S do
-//        If r and s satisfy the join condition
-//           Then output the tuple <r,s>
-INLJoin::~INLJoin(){}
+		 const Condition &condition){}
 
-RC INLJoin::getNextTuple(void *data){
-//	_leftIn->getNextTuple(data);
-//	_rightIn->getNextTuple();
-	return -1; 
-}
+
+RC INLJoin::getNextTuple(void *data){}
 
 // For attribute in vector<Attribute>, name it as rel.attr
 void INLJoin::getAttributes(vector<Attribute> &attrs) const{
-	_leftIn->getAttributes(attrs);
 
-	vector<Attribute> SAttrs;
-	_rightIn->getAttributes(SAttrs);
-
-	for(unsigned rightIndex = 0; rightIndex < SAttrs.size(); rightIndex++){
-		attrs.push_back(SAttrs.at(rightIndex));
-	}
 }
