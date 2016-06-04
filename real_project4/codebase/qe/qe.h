@@ -205,6 +205,9 @@ class Filter : public Iterator {
         void getAttributes(vector<Attribute> &attrs) const;
 
     private:
+        bool checkScanCondition(int r, CompOp c, const void * value);
+        bool checkScanCondition(float f, CompOp c, const void * value);
+        bool checkScanCondition(char * s, CompOp c, const void * value);
         Iterator * ItF;
         Condition our_cond;
         vector<Attribute> res;
