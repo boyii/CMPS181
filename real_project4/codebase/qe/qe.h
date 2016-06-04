@@ -229,11 +229,16 @@ class INLJoin : public Iterator {
                IndexScan *rightIn,          // IndexScan Iterator of input S
                const Condition &condition   // Join condition
         );
-        ~INLJoin(){};
+        ~INLJoin();
 
         RC getNextTuple(void *data);
         // For attribute in vector<Attribute>, name it as rel.attr
         void getAttributes(vector<Attribute> &attrs) const;
+
+    private:
+	Iterator *_leftIn;
+	IndexScan *_rightIn;
+	Condition _condition;	
 };
 
 
