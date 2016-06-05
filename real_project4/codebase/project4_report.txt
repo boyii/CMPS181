@@ -2,7 +2,7 @@
 Team number (e.g., 01) : 
 #1 Student ID : 1360510
 #1 Student Name : Jonathan Balasingham
-#2 Student ID : 
+#2 Student ID : 1360826 
 #2 Student Name : Ryan Brounley
 #3 Student ID : 
 #3 Student Name : Steven Rodriguez
@@ -13,8 +13,14 @@ Team number (e.g., 01) :
 First and foremost we needed to store the names of the attributes we were working with. 
 
 3. Index Nested Loop Join
-- Describe how your Index Nested Loop Join works.
+- INLJoin is constructed with a Iterator and an IndexScan. Since we are only implementing for the equals, I ignored the condition (and hardcoded the loop to check for equals). 
 
+-getNextTuple() keeps track of two loops (inner and outer) and returns tuples that equal within each other. I modeled the method off the below pseudocode. It uses an index on the inner loop and not on the outer. So I set up the iterator on the outside loop and the IndexScan for the inner. I made nested while loops to hit every value and when the tuple equals, I set the value of data to be the attributes of the two inputs.
+	- foreach tuple r in R do Use Index on S
+		foreach tuple s in S where ri == sj do
+				add <r, s> to result
+
+-getAttributes() just gets the attributes for both iterators through their wrapper functions of getAttributes() and returns an array of both of them. This returns all the attributes of the data set.
 
 4. Implementation Detail
 - Have you added your own source file (.cc or .h)?
@@ -23,6 +29,7 @@ First and foremost we needed to store the names of the attributes we were workin
 - Have you implemented any optional features? Then, describe them here.
 
 - Other implementation details:
+
 
   Filter: 
   
@@ -42,10 +49,8 @@ First and foremost we needed to store the names of the attributes we were workin
 
 
 5. Other (optional)
-- Freely use this section to tell us about things that are related to the project 4, but not related to the other sections (optional)
 
-
-IMPORTANT**:
+*******************************************IMPORTANT*******************************:
 
 We could not figure out how to fix the compilation issues from qetest_05 and beyond. We tried everything that fixed the 
 previous undefined reference problems and nothing worked. Everything was added to the makefile, order was changed around so
