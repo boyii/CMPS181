@@ -55,7 +55,7 @@ from here we stored our finding into an index file, and let that our index manag
     Simple constructor that assigns arguments to field variables. 
     
     getNextTuple:
-    
+    Looks at the next tuple and saves the data based on what type of variable is used. (Forced to be size 4 bytes). 
     
     getAttributes:
     Takes in an empty vector that will be the projection of the field vector of Project and the corresponding vector of the input data. 
