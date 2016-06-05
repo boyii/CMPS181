@@ -221,7 +221,7 @@ class Project : public Iterator {
     public:
         Project(Iterator *input,                    // Iterator of input R
               const vector<string> &attrNames);   // vector containing attribute names
-        ~Project(){};
+        ~Project();
 
         RC getNextTuple(void *data);
         // For attribute in vector<Attribute>, name it as rel.attr
@@ -240,11 +240,15 @@ class INLJoin : public Iterator {
                IndexScan *rightIn,          // IndexScan Iterator of input S
                const Condition &condition   // Join condition
         );
-        ~INLJoin(){};
+        ~INLJoin();
 
         RC getNextTuple(void *data);
         // For attribute in vector<Attribute>, name it as rel.attr
         void getAttributes(vector<Attribute> &attrs) const;
+    private:
+	Iterator*  _leftIn;
+	IndexScan * _rightIn;
+	Condition _condition;
 };
 
 
