@@ -1,16 +1,16 @@
 1. Basic information
 Team number (e.g., 01) : 
-#1 Student ID : 
-#1 Student Name : 
+#1 Student ID : 1360510
+#1 Student Name : Jonathan Balasingham
 #2 Student ID : 
-#2 Student Name : 
+#2 Student Name : Ryan Brounley
 #3 Student ID : 
-#3 Student Name : 
+#3 Student Name : Steven Rodriguez
 
 
 2. Catalog information about Index
 - Show what catalog information you store for an index. 
-
+First and foremost we needed to store the names of the attributes we were working with. 
 
 3. Index Nested Loop Join
 - Describe how your Index Nested Loop Join works.
@@ -18,10 +18,27 @@ Team number (e.g., 01) :
 
 4. Implementation Detail
 - Have you added your own source file (.cc or .h)?
+  No we did not.
 
 - Have you implemented any optional features? Then, describe them here.
 
 - Other implementation details:
+
+  Filter: 
+  
+    Here i will go through the implementations features of the filter class.
+    
+    Constructor:
+    Ive added an iterator, vector and Comparison fields to the Filter class to assist in holding information.
+    All the constructor does is intitlize the firsst two of these fields, the third will be filled later.
+    
+    getNextTuple:
+    I implemented this function recursively since most of it could be  partitioned into a single helper function.
+    In this case that helper function is called verify, as the name suggests
+    
+    getAttributes:
+    outsources the work to the Iterator class, isnt really used since we intitlize with constructor.
+    
 
 
 5. Other (optional)
