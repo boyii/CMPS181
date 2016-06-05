@@ -242,6 +242,8 @@ RC INLJoin::getNextTuple(void *data){
             }
         inner = true;
         }
+	free(innerData);
+	free(outerData);
         return 0;
 }
 
