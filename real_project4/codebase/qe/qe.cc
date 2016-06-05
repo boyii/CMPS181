@@ -170,39 +170,62 @@ void Filter::getAttributes(vector<Attribute> &attrs) const{
 }
 
 Project::Project(Iterator *input, const vector<string> &attrNames){
-    this->pIt = input;
+    pIt = input;
     pAttrs = attrNames;
-
 }
 
 Project::~Project(){}
 
 RC Project::getNextTuple(void *data){
-   
-   // pIt->getNextTuple(data);
-   return 0; 
+    void* tmp = malloc(PAGE_SIZE);
+    auto k = 0;
+    auto l = 0;
+    auto offset = 0;
+    auto match = 1;
+    RC rc = pIt->getNextTuple(tmp);
+    if(rc != 0)
+       return -1;
+
+    // make a vector and fill it with attrs from tuple
+    vector<Attribute> attrs;
+    pIt->getAttributes(attrs);
+
+    for(auto i = 0; i < pAttrs.size(); i++) {
+        for(auto j = 0; j < attrs.size(); j++){
+            if(pAttrs[i].compare(attrs[j].name) == 0) {
+                match = 0; // It's a match!
+                memcpy((char*) data + k, (char *) tmp+l, 4);
+                break;
+            }
+            l += 4; // compound offset
+        }
+        if(match == 0)
+            k += 4;
+    }
+
+    return 0;
 }
 
-// For attribute in vector<Attribute>, name it as rel.attr
 void Project::getAttributes(vector<Attribute> &attrs) const{
-    attrs.clear(); // clear the passed in vector
-
     // get attributes from iterator field and store them in a vector
     vector<Attribute> iterAttrs;
     pIt->getAttributes(iterAttrs);
 
+    attrs.clear(); // erases any possible existing data in vector. 
     // nested for loops to compare each item 
     // to project with all elements in a column
-    for(unsigned i = 0; i < pAttrs.size(); i++) {
-        for(unsigned j = 0; j < iterAttrs.size(); j++) {
+    for(auto i = 0; i < pAttrs.size(); i++) {
+        for(auto j = 0; j < iterAttrs.size(); j++) {
             if(pAttrs[j].compare(iterAttrs[j].name) == 0){
                 attrs.push_back(iterAttrs[j]);
-                break;
             }
+            break;
         }
     }
 
 }
+
+
 INLJoin::INLJoin(Iterator *leftIn,
                  IndexScan *rightIn,
                  const Condition &condition){
