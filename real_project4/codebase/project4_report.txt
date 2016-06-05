@@ -44,3 +44,19 @@ First and foremost we needed to store the names of the attributes we were workin
 5. Other (optional)
 - Freely use this section to tell us about things that are related to the project 4, but not related to the other sections (optional)
 
+
+IMPORTANT**:
+
+We could not figure out how to fix the compilation issues from qetest_05 and beyond. We tried everything that fixed the 
+previous undefined reference problems and nothing worked. Everything was added to the makefile, order was changed around so
+the dependencies were properly configured, the correct codebase was downloaded too, we even change where the class 
+was located and nothing seemed to work. 
+
+we decided it would be better to try to write out the implementation to hopefully try to get as much credit as possible. 
+Unfortunately, without tests we couldnt verify our code to be correct, (it probably isnt since there were a multitude of
+bugs within the the making of the first 4 tests that do work).
+With that being said, please have mercy. 
+
+
+
+
