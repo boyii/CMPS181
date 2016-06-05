@@ -4,7 +4,7 @@ Team number (e.g., 01) :
 #1 Student Name : Jonathan Balasingham
 #2 Student ID : 1360826 
 #2 Student Name : Ryan Brounley
-#3 Student ID : 
+#3 Student ID : 1322145
 #3 Student Name : Steven Rodriguez
 
 
@@ -46,7 +46,17 @@ First and foremost we needed to store the names of the attributes we were workin
     getAttributes:
     outsources the work to the Iterator class, isnt really used since we intitlize with constructor.
     
-
+  Project:
+  
+    Constructor: 
+    Simple constructor that assigns arguments to field variables. 
+    
+    getNextTuple:
+    
+    
+    getAttributes:
+    Takes in an empty vector that will be the projection of the field vector of Project and the corresponding vector of the input data. 
+    A nested for loop compares each individual element of one vector with all equivalent elements of the other vector. 
 
 5. Other (optional)
 
