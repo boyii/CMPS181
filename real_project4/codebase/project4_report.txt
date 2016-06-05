@@ -10,7 +10,10 @@ Team number (e.g., 01) :
 
 2. Catalog information about Index
 - Show what catalog information you store for an index. 
-First and foremost we needed to store the names of the attributes we were working with. 
+First and foremost we needed to store the names of the attributes we were working with along with from which tables
+the attrbributes were from. (as a far as naming conventions are concerned i just called this file tableName_attrName.t)
+We then used scan to go through our data and get all that matched with our attribute name (using scan and no comparison).
+from here we stored our finding into an index file, and let that our index manager organize it accordingly.
 
 3. Index Nested Loop Join
 - INLJoin is constructed with a Iterator and an IndexScan. Since we are only implementing for the equals, I ignored the condition (and hardcoded the loop to check for equals). 
